@@ -1,0 +1,26 @@
+
+Stock length: 600
+
+LENGTH:   |  50 |  40 |  30 |  20 |
+--------------------------------
+QUANTITY: |  15 |  20 |  11 |  12 |
+--------------------------------
+
+SELECTED ALGO: Max number of elements to fit in stock for every object
+OBJ IDX:      |   0 |   1 |   2 |   3 |
+--------------------------------
+MAX IN STOCK: |  12 |  15 |  11 |  12 |
+--------------------------------
+NUM OF (CUSTOM) PERMUTATIONS: 32448
+NUMBER OF COLUMNS (CONFIGS): 737
+NUMBER OF ROWS: 4
+Matrix size: 2948
+NUMBER OF INT VARIABLES IN GLPK: 737
+SOLUTION STATUS MIP: GLP_OPT
+-----------------------------------------------
+               STOCKS NEEDED = 4          	  
+-----------------------------------------------
+C[  50]:  |   8  |   0  |   0  |  10  |---   0 |   1 times 
+C[ 152]:  |   5  |   4  |   3  |   5  |---   0 |   1 times 
+C[ 197]:  |   4  |  10  |   0  |   0  |---   0 |   1 times 
+C[ 623]:  |   0  |   9  |   8  |   0  |---   0 |   1 times 
