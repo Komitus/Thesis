@@ -40,7 +40,6 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 	for (int i = 1; i <= numOfRows; i++)
 	{
 		glp_set_row_bnds(lp, i, GLP_LO, (double)(input->arrOfObjs[i - 1].quantity), 0.0);
-		assert(glp_get_row_lb(lp, i) == (double)(input->arrOfObjs[i - 1].quantity));
 	}
 
 	glp_set_obj_dir(lp, GLP_MIN);
@@ -97,7 +96,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 			for (int i = 1; i <= numOfRows; i++)
 			{
 				fprintf(io_info->outFile, " | %3g ", config[i]);
-				objsQuantities[i - 1] += config[i];
+				objsQuantities[i - 1] += (config[i] * x);
 			}
 			fprintf(io_info->outFile, " |--- %3g | %3g times \n", spaceLeft, x);
 		}
@@ -107,14 +106,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 
 	for (size_t i = 0; i < numOfRows; i++)
 	{
-		if (input->arrOfObjs[i].quantity > (size_t)objsQuantities[i])
-		{
-			fprintf(stderr, "\nSolution doesn't  meeet input requirements:\n");
-			fprintf(stderr, "Obj idx = %lu, expected >= %lu, got = %lu\n",
-					i, input->arrOfObjs[i].quantity, (size_t)objsQuantities[i]);
-			retStatus = FAIL_STATUS;
-			break;
-		}
+		assert(input->arrOfObjs[i].quantity <= (size_t)objsQuantities[i]);
 	}
 	/* housekeeping */
 	free(val);

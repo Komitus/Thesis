@@ -64,7 +64,7 @@ int run_program(int argc, char *const *argv)
                     {
                         fprintf(stderr, "ERROR OCCURED IN APPROX\n");
                     }
-
+                    retStatus = SUCCES_STATUS;
                     for (size_t i = 0; i < vector_size(vec); i++)
                     {
                         free(vec->items[i]);
