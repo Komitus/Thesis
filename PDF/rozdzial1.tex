@@ -1,15 +1,19 @@
 \chapter{Analiza problemu}
 \thispagestyle{chapterBeginStyle}
 
+W tym rozdziale scharakteryzowany zostanie problem cięcia belek (ang. Cutting Stock Problem) rozważany przez autora. 
+Zarysowane też zostaną podstawy algorytmów używanych do jego rozwiazania.
 
-\section{Problem cięcia belek jako problem optymalizacyny}
+\section{Problem cięcia belek}
+Jest to problem znalezienia takiego rozkładu elementów na belkach, z których owe elementy będa wycinane, tak aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$),a liczba rodzajów elementów ($d$) jest stała. Istnieja też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były, jak najdłuższe, na późniejsze wycinki itp. \\
+Jest to problem optymalizacyjny - liczbę żużytych belek można wyrazić za pomocą funkcji celu (całkowitej w przypadku, gdy instancja problemu nie przewiduje możliwości dzielenia elementów), i pragniemy ją zminimalizować.
+Wynik optymalny, w tym wypadku, to taka liczba zużytych w rozwiązaniu belek, że już niemożliwe byłoby wycięcie wszystkich elementów z liczby o jeden mniejszej.
+Z punktu widzenia złożoności obliczeniowej, problem należy do klasy problemów silnie NP-trudnych. Dopóki nie zostanie udowodnione $P=NP$, nie istnieje dla niego algorytm aproksymacyjny ze wspołczynnikiem mniejszym niż 3/2. W przeszłości konstruowano algorytmy dające wynik optymalny, które działy w czasie mniejszym bądź równym wielomianowemu, ale działo się to dla przypadku małego $d$, bądź dawały wynik optymalny powiększony o funkcję od $d$ tj. np. $OPT + O(log^2(d))$.\cite{ALG_OPT_1}
+
+\section{Sformułowanie problemu liniowego całkowitoliczbowego}
+Przyjmijmy nastepujące oznaczenia: zbiór rodzajów elementów: $T = \{T_1, T_2, \dots, T_n\}$, każdy rodzaj $T_i$ z przypisaną pozytywną długością całkowitą $p_i$ .
 
 
-\section{Algorytm aproksymacyjny}
-
-
-\section{Algorytm siłowy}
-\subsection{Funkcja celu dla minimalnego zużycia belek}
 
 
 \section{Algorytm OPT+1}
