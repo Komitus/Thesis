@@ -1,33 +1,33 @@
 \chapter{Analiza problemu}
 \thispagestyle{chapterBeginStyle}
 
-W tym rozdziale scharakteryzowany zostanie problem cięcia belek (ang. Cutting Stock Problem), rozważany przez autora, w dalszej części oznaczony jako PCB.
+W tym rozdziale scharakteryzowany zostanie Problem Cięcia Belek (ang. Cutting Stock Problem), rozważany przez autora, w dalszej części oznaczony jako PCB.
 Zarysowane też zostaną podstawy algorytmów używanych do jego rozwiazania.
 
 \section{Problem cięcia belek}
-Jest to problem znalezienia takiego rozkładu elementów na belkach, z których owe elementy będa wycinane, tak aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$),a liczba rodzajów elementów ($d$) jest stała. Istnieja też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były, jak najmniejsze.\\
+Jest to problem znalezienia takiego rozkładu elementów na belkach, z których owe elementy będa wycinane, aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$),a liczba rodzajów elementów ($d$) jest stała. Istnieja też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były jak najmniejsze.\\
 Jest to problem optymalizacyjny - liczbę żużytych belek można wyrazić za pomocą funkcji celu (całkowitej w przypadku, gdy instancja problemu nie przewiduje możliwości dzielenia elementów), i pragniemy ją zminimalizować.
 Wynik optymalny, w tym wypadku, to taka liczba zużytych w rozwiązaniu belek, że już niemożliwe byłoby wycięcie wszystkich elementów z liczby o jeden mniejszej.
-Z punktu widzenia złożoności obliczeniowej, problem należy do klasy problemów silnie NP-trudnych. W przeszłości konstruowano algorytmy dające wynik optymalny, które działy w czasie mniejszym bądź równym wielomianowemu, ale działo się to dla przypadku małego $d$, bądź dawały wynik optymalny powiększony o funkcję od $d$ tj. np. $OPT + O(log^2(d))$.\cite{ALG_OPT_1}
+Z punktu widzenia złożoności obliczeniowej, problem należy do klasy problemów silnie NP-trudnych. W przeszłości konstruowano algorytmy dające wynik optymalny, które działy w czasie mniejszym bądź równym wielomianowemu, ale działo się to dla przypadku małego $d$, bądź dawały wynik optymalny powiększony o funkcję od $d$ tj. np. $OPT + O(log^2(d))$  \cite{ALG_OPT_1}.
 
 \section{Sformułowanie problemu liniowego całkowitoliczbowego}
 Przyjmijmy nastepujące oznaczenia: zbiór rodzajów elementów: $\mathcal{T} = \{T_1, T_2, \dots, T_n\}$, każdy rodzaj $T_i$ z przypisaną pozytywną długością całkowitą $p_i \leq \beta$. Zbiór wszystkich elementów: $|\mathcal{\sigma}| = n$, w którym występuje $n_i$ elementów typu $T_i$, tj. $\sum_{T_i \in \mathcal{T}} n_i = n$.
 Konfiguracja $C_i$ jest zbiorem elementów o sumie długości, co najwyżej $\beta$ (długość belki). $C_i$ może mieć postać $d$-wymiarowego wektora $C_i = \langle a(C_i, 1), a(C_i,2), \dots, a(C_i,d)\rangle$, w którym każda $j$-ta pozycja, $a(C_i)$ mówi o liczbie elementów długości $p_j$ w $C_i$. Niech $\mathcal{C}$ będzie zbiorem wszystkich konfiguracji, którego moc wyniesie maksymalnie $n^d$, co oczywiście nie zdarzy sie często, gdyż niektóre elementy są na tyle duże, że kolejne już nie zmieszczą się do tej samej belki.
 Wtedy problem cięcia belek może zostać sformułowany w następujący sposób:
-\begin{align*}
-	min m =&\sum_{C_i \in \mathcal{C}} x_{C_i}, \\
-	\text{tak, że} &\sum_{C_i \in \mathcal{C}} a(C_i,j)x_{C_i} \geq n_j, dla j = 1, \dots d, \\
-	x_{C_i} &\in \mathbb{Z}_{\geq 0}, \text{dla każdego} \ C_i \in \mathcal{C} \\
-\end{align*}
+\begin{align}
+	min \ m =&\sum_{C_i \in \mathcal{C}} x_{C_i}, \\
+	\text{tak, że} &\sum_{C_i \in \mathcal{C}} a(C_i,j)x_{C_i} \geq n_j, dla \ j = 1, \dots, d \\
+	x_{C_i} &\in \mathbb{Z}_{\geq 0}, \text{dla każdego} \ C_i \in \mathcal{C} 
+\end{align}
 
-W tym sformułowaniu $n_j$ oznacza liczbę wszystkich elementów długości $p_j$. Zmienna $x_{C_i}$ mówi o liczbie belek przechowujących obiekty zgodnie z konfiguracją $C_i$.
+W tym sformułowaniu $n_j$ oznacza liczbę wszystkich elementów długości $p_j$. Zmienna $x_{C_i}$ mówi o liczbie belek przechowujących obiekty zgodnie z konfiguracją $C_i$, natomiast $m$ o liczbie zużytych belek.
 
 \section{Bin Packing}
-Analogicznym problemem do PCB jest problem pakowania koszy (ang. Bin Packing) dalej wspominany jako BP.
+Analogicznym problemem do PCB jest Problem Pakowania (ang. Bin Packing) dalej wspominany jako PP.
 Może być rozpatrywany w kontekście optymalizacji. W tym przypadku, elementy różnych rozmiarów musza być upakowane w \textbf{skończoną} (tutaj różnica w stosunku do PCB) liczbę koszy, każdy zadanej, stałej długości, w taki sposób który zminimalizuje ich zużytą liczbę. Patrząc na niego w kategorii problemu decyzyjnego, pytaniem jest czy zadane elementy zmieszczą się w podaną na wejściu problemu liczbę koszy.
-W przypadku zdefiniowania BP w programowaniu liniowym całkowitoliczbowym, w przeciwieństwie do PCB, zmienne całkowitoliczbowego nie reprezentują ile razy dana konfiguracja została uzyta, ale: 1. czy dany kosz został użyty oraz 2. czy element o indeksie odpowiadającemu zmiennej został włożony do kosza o odpowadajacym indeksie.
+W przypadku zdefiniowania PP w programowaniu liniowym całkowitoliczbowym, w przeciwieństwie do PCB, zmienne całkowitoliczbowego nie reprezentują ile razy dana konfiguracja została uzyta, ale czy dany kosz został użyty oraz czy element o indeksie odpowiadającemu zmiennej został włożony do kosza o odpowadajacym indeksie.
 
-\textbf{Tu brakuje opisu zmiennych, ale czy ja w ogóle mam to opisywać, skoro to paste z wiki?}
+\textbf{Dane wejściowe}: Skończony zbiór elementów $I$, rozmiar $s(i) \in \mathbb{Z}$ dla każdego elementu $i \in I$, pojemność kosza $B \in \mathbb{Z^+}$, $K \in \mathbb{Z^+}$.
 
 \begin{align*}
 	min \; K = &\sum_{j=1}^{n} y_{j}, \; K \geq 1 \\
@@ -36,22 +36,23 @@ W przypadku zdefiniowania BP w programowaniu liniowym całkowitoliczbowym, w prz
 	&y_j \in \{0,1\}, \; & \forall j \in \{1, \dots, n\} \\
 	&x_{ij} \in \{0,1\}, \; & \forall i \in I \forall j \in \{1, \dots, n\} \\
 \end{align*}
-
+gdzie $y_i = 1$ jeżeli kosz $j$ jest użyty,  $x_{ij} = 1$ jeżeli element $i$ jest włożony do kosza $j$.
+	
 Można też na problem popatrzeć poprzez pryzmat liczb wymiernych:
-$B = 1 \land \forall i \in I: s(i) \in \mathbb{Q} \cap \left(0, 1\right]$
+$B = 1 \land \forall i \in I: s(i) \in \mathbb{Q} \cap \left(0, 1\right]$. Istnieją też jego odmiany, gdzie w danych wejściowych pojemnosć kosza $B$ nie jest stała, a zamiast niej jest zadany zbiór zawierający pojemności koszy, które mogą być różne.
 
 \section{Algorytm aproksymacyjny}
 Jednym ze posobów na poradzenie sobie z brakiem algorytmów wielomianowych dla problemów NP-zupełnych, obok stosowania algorytmów z wykładniczym czasem działania dla małych danych wejściowych lub izolowania specjalnych przypadków dla których znamy algorytmy wielomianowe, jest próba znalezenia takich algorytmów, które, w czasie wielomianowym, dzadzą rozwiązania bliskie optymalnego. Często takie rozwiązanie powinno dawać satysfakcjonujące wyniki. Algorytm, który zwraca rozwiązania bliskie optymalnego, nazywamy \textbf{\textit{algorytmem aproksymacyjnym}}. \\
-Do określenia dokładności wyników takich algorytmów w rozwiązywaniu problemów optymalizacyjnych, używa się pojęcia współczynnika aproksymacji. Mówimy, że algorytm ma współczynnik aproksymacji $\rho(n)$, gdy dla każdych danych wejściowych rozmiaru $n$, koszt $C$ rozwiązania uzyskanego przez algorytm mieści się we współczynniku $\rho(n)$ kosztu $C^*$ optymalnego rozwiązania. Tak dla problemu minimalizacji zależność wygląda następująco: $0< C^* \leq C$. $C/C^*$ jest współczynnikiem razy ile koszt rozwiązania przybliżonego jest większy od kosztu rozwiązania optymalnego. Analogicznie się to ma do przypadku problemu maksymalizacji: $0< C \leq C^*$. Wspólczynnik to: $C^*/C$.\cite[Rozdział~35]{Cormen_algos} \\
+Do określenia dokładności wyników takich algorytmów w rozwiązywaniu problemów optymalizacyjnych, używa się pojęcia współczynnika aproksymacji. Mówimy, że algorytm ma współczynnik aproksymacji $\rho(n)$, gdy dla każdych danych wejściowych rozmiaru $n$, koszt $C$ rozwiązania uzyskanego przez algorytm mieści się we współczynniku $\rho(n)$ kosztu $C^*$ optymalnego rozwiązania. Tak dla problemu minimalizacji zależność wygląda następująco: $0< C^* \leq C$. $C/C^*$ jest współczynnikiem razy ile koszt rozwiązania przybliżonego jest większy od kosztu rozwiązania optymalnego. Analogicznie się to ma do przypadku problemu maksymalizacji: $0< C \leq C^*$. Wspólczynnik to: $C^*/C$  \cite[Rozdział~35]{Cormen_algos}. \\
 
 
-Dla BP istnieje kilka algorytmów aproksymacyjnych: 
+Dla PP istnieje kilka algorytmów aproksymacyjnych: 
 
 \begin{table}[!h]
 \begin{center}
 	\begin{tabular}{ |p{3cm}||p{5cm}|p{3cm}|  }
 		\hline
-		Skrót & Nazwa angielska & Współczynnik przybliżenia\\
+		Skrót & Nazwa angielska & Współczynnik aproksymacji\\
 		\hline
 		NF   & Next Fit & 2\\
 		FF & First Fit & 1.7\\
@@ -62,16 +63,16 @@ Dla BP istnieje kilka algorytmów aproksymacyjnych:
 		$H_M$ & Harmonic & 1.691\\	
 		\hline
 	\end{tabular}
-	\caption{\label{APPROX_RATIOS}Tabela algorytmów aproksymacyjnych - na podstawie artykułu ``A note on the approximability of cutting stock problems``}
+	\caption{\label{APPROX_RATIOS}Tabela algorytmów aproksymacyjnych - na podstawie artykułu \textit{A note on the approximability of cutting stock problems} }
 \end{center}
 \end{table}
 
-W 1980 pokazano, że dla uogólnionego d-wymiarowego Bin Packing, każdy algorytm o złożoności $o(nlogn)$ musi mieć współczynnik aproksymacji $\geq d$.\cite{APPROX_RATIO}
+W 1980 pokazano, że dla uogólnionego d-wymiarowego Bin Packing, każdy algorytm o złożoności $o(nlogn)$ musi mieć współczynnik aproksymacji większy lub równy $d$ \cite{APPROX_RATIO}.
 
-W 1994 wykazano, że heurystyki FFD i BFD charakteryzują się absolutnym współczynnikiem $1.5$, który zarazem jest najlepszym możliwym dla PCB, dopóki nie zostanie udowodnione $P=NP$.\cite{WORST_CASE_APPROX}
+W 1994 wykazano, że heurystyki FFD i BFD charakteryzują się absolutnym współczynnikiem $1.5$, który zarazem jest najlepszym możliwym dla PCB, dopóki nie zostanie udowodnione $P=NP$ \cite{WORST_CASE_APPROX}.
 
-Według autorów pracy, ``A note on the approximability of cutting stock problems``, owe algorytmy po pewnej konwersji mogą zostać użyte do rozwiązywania instancji Problemu Cięcia Belek. Stawiają oni tezę, że przy zastosowaniu zaprezentwanych konwersji, również istnieje Asymptotic Polynomial Time Approximation Scheme (APTAS) dla jednowymiarowego PCB.\cite{NOTE_ON_APPROX}
-Najbardziej znanym takim schematem jest ten zaprezentowany przez Fernandeza de la Vegę i Luekera, który zwaraca rozwiązania o koszcie mniejszym lub równym: $(1+\epsilon)OPT(L) + 1$, gdzie $OPT(L)$ to koszt optymalny.\cite{APTAS} \\
+Według autorów pracy, \textit{A note on the approximability of cutting stock problems}, owe algorytmy po pewnej konwersji mogą zostać użyte do rozwiązywania instancji Problemu Cięcia Belek. Stawiają oni tezę, że przy zastosowaniu zaprezentwanych konwersji, również istnieje Asymptotic Polynomial Time Approximation Scheme (APTAS) dla jednowymiarowego PCB \cite{NOTE_ON_APPROX}.
+Najbardziej znanym takim schematem jest ten zaprezentowany przez Fernandeza de la Vegę i Luekera, który zwaraca rozwiązania o koszcie mniejszym lub równym: $(1+\epsilon)OPT(L) + 1$, gdzie $OPT(L)$ to koszt optymalny \cite{APTAS}. \\
 
 W niniejszej pracy do dalszych rozważań i implementacji wybrany został First Fit Decreasing.
 
@@ -81,13 +82,13 @@ Algorytm jest opisany następująco:
 
 
 \begin{algorithm}[H]
-	\KwData{Lista elementów różnej długości}
-	\KwResult{Upakowanie - ułożenie elementów w koszach tak, aby suma rozmiarów elementów w każdym koszy była równa, co najwyżej pojemności kosza}
-	Posortowanie elementów w kolejności nierosnącej\;
-	Otworzenie nowego kosza\;
-	\ForEach{elementu z posortowanej listy, znajdź pierwszy kosz do którego mieści się aktualny element}{
+	\KwData{Lista elementów różnej długości.}
+	\KwResult{Upakowanie - ułożenie elementów w koszach tak, aby suma rozmiarów elementów w każdym koszy była równa, co najwyżej pojemności kosza.}
+	Posortowanie elementów w kolejności nierosnącej \;
+	Otworzenie nowego kosza \;
+	\ForEach{element z posortowanej listy, znajdź pierwszy kosz do którego się mieści}{
 		\If{znalazł się taki kosz}{dołóź element do tego kosza}
-		\Else{Otwór nowy kosz i dołóż do niego element}	
+		\Else{Otwórz nowy kosz i dołóż do niego element}	
 	}
 	
 	\caption{First Fit Decreasing - pseudokod}
@@ -95,7 +96,14 @@ Algorytm jest opisany następująco:
 
 
 \section{Algorytm OPT+1}
-Tutaj opiszę, że dzieli on te elementy na małe i duże, zajmuje sie duzymi tak jak wyżej opisane, potem pakuje małe i te które mieszczą się frakcyjnie są trakowane first-fitem. Nie zaimplementowałem tego algorytmu, bo używa algorytmu Lenstry, który do rozwiązania DLP powstałego przy uzyciu tego algorytmu, wykorzystuje pewną wersję algorytmu Ellipsoid.
-\subsection{Idea i działanie}
-\subsection{Modyfikacje}
+Opis algorytmu, który pierwotnie miał zostać zaimplementowany w niniejszej pracy, można znaleźć w dokumencie z 2011 roku, \textit{A Polynomial Time OPT + 1 Algorithm for the Cutting Stock Problem with a Constant Number of Object Lengths} \cite{ALG_OPT_1}. 
+W uproszczeniu, bazuje on na przytoczonym w 
+\hyperlink{section.1.2}{sekcji 1.2} sformułowaniu.
+Wprowadzony został tam jednak podział na zbiorze typów elementów. 
+Wszystkie elementy poniżej długości $\epsilon\beta$ zaliczono do \textit{małych}, a powyżej do \textit{dużych}, gdzie $\epsilon = 1/(2d-1)$. To samo przełożyło się na konfiguracje. Podzbiory dużych elementów w konfiguracjach nazywano dużymi konfiguracjami, a podzbiory małych, małymi. Dodatkowo wprowadzono podzbiór dużych konfiguracji, które odpowiadają niezerowym zmiennym ($S^B$). Następnie tak zamieniono zapis warunków z pkt. 1.2 ze wcześniejszego sformułowania, aby rozpatrzyć podział na duże i małe konfiguracje. Natomiast na zmienne, które reprezentują liczbę zużytych belek nałożono następujące ograniczenia: te związane z małymi konfiguracjami należą do $\mathbb{R}^+\cup \{0\}$ dla każdej konfiguracji, której duża konfiguracja należy do $S^B$, w przeciwnym wypadku zmienna ta jest równa zero. Na drugie nałożono warunek całkowitości (należenie do $\mathbb{Z}_{\geq 0}$) , gdy duża konfiguracja z nią związania należy do $S^B$, w przeciwnym wypadku zmienna jest zerowana.
+Takie sformułowanie nazywamy MIP (ang. Mixed Integer Programming), ponieważ wymaga się, aby tylko część zmiennych była całkowita (ang. integer).
+Z tego powodu dalsza cześć algorytmu obejmuje procedure zaokrąglania, która pakuje małe elementy które jeszcze dało radę zapakować całkowicie według zadanego sformułowania programowania liniowego. Pozostałe, które zostały zapakowane cześciowo pakuje metodą First Fit. Następnie wykazano, że resztę elementów, które mogły pozostać, jest możliwa do upakowania w jedną belkę (stąd nazwa OPT + 1). \\
+\textbf{Niestety, aby algorytm pozostał w klasie złożoności wielomianowej, główna część algorytmu (MIP) jest rozwiązywana za pomocą algorytmu Lenstry, który z kolei bazuje na zmodyfikowanej wersji metody elipsoidalnej. Próżno szukać jej w powszechnie dostępnych solverach, takich jak np. GLPK.
+Na nieszczęście autora niniejszej pracy, pomimo bardzo obiecującej teoretycznej poprawności i złożoności algorytmu OPT + 1, nie był on przez to w stanie, na obecnym etapie kształcenia, zaimplementować go w oryginalnej formie samodzielnie.}  
+
 
