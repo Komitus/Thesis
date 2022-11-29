@@ -20,41 +20,38 @@ size_t approx(ProblemInstance *input, Vector *v)
     size_t stockLength = input->stockLength;
     size_t numOfTypes = input->numOfTypes;
 
-    for (size_t i = 0; i < input->numOfTypes; i++)
+    for (size_t i = 0; i < numOfTypes; i++)
     {
         ObjWithQuantity currObj = input->arrOfObjs[i];
 
-        size_t idxOfConfigToStart = 0;
+        size_t k = 0;
         for (size_t j = 0; j < currObj.quantity; j++)
         {
-            uint8_t fitted = 0;
-            for (size_t k = idxOfConfigToStart; k < vector_size(v); k++)
+
+            while (k < vector_size(v) && ((StockConfig *)(v->items[k]))->spaceLeft < currObj.length)
             {
-                StockConfig *item = (StockConfig *)(v->items[k]);
-                if (item->spaceLeft >= currObj.length)
-                {
-                    item->config[i]++;
-                    item->spaceLeft -= currObj.length;
-                    fitted = 1;
-                    break;
-                }
+                k++;
             }
 
-            if (!fitted) // new variable bcs i want to have cached iterator "k"
+            if (k < vector_size(v))
             {
-                StockConfig *newConfig = calloc(1, sizeof(*newConfig) + sizeof(*newConfig->config) * numOfTypes);
-                if (newConfig == NULL)
+                ((StockConfig *)(v->items[k]))->config[i]++;
+                ((StockConfig *)(v->items[k]))->spaceLeft -= currObj.length;
+            }
+            else
+            {
+                StockConfig *newStock = calloc(1, sizeof(*newStock) + sizeof(*newStock->config) * numOfTypes);
+                if (newStock == NULL)
                 {
                     fprintf(stderr, "Out of memory\n");
                     exit(EXIT_FAILURE);
                 }
-                newConfig->config[i]++;
-                newConfig->spaceLeft = stockLength - currObj.length;
-                if (vector_push(v, newConfig) == FAIL_STATUS)
+                newStock->config[i]++;
+                newStock->spaceLeft = stockLength - currObj.length;
+                if (vector_push(v, newStock) == FAIL_STATUS)
                 {
                     return SIZE_MAX;
                 }
-                idxOfConfigToStart = vector_size(v) - 1;
             }
         }
     }

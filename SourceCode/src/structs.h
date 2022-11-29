@@ -52,7 +52,6 @@ typedef struct _StockConfig
 typedef struct _ProblemInstance
 {
     ObjWithQuantity *arrOfObjs;
-    void *ptrToSolutionSpecified;
     size_t numOfConfigs;
     size_t numOfTypes;
     size_t stockLength;
