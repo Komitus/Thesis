@@ -4,11 +4,11 @@
 Przedmiotem tego rozdziału będzie opis implementacji dwóch podprogramów realizujących: 
 \begin{enumerate}
 	\item aproksymacyjny algorytm First Fit Decreasing 
-	\item sformułowanie liniowe z sekcji 1.2.	
+	\item sformułowanie liniowe z sekcji \ref{linear_formula}.	
 \end{enumerate}
 
 Obydwa zostały zaimplementowane w języku C, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego solver GLPK zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
-Zrealizowano je w postaci programu konsolowego, który dla odpowiednich flag wywołuje odpowiadające funkcje. 
+Zrealizowano je w postaci programu konsolowego, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0.
 
 \section{Dane wejściowe}
 Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
@@ -48,14 +48,15 @@ Kod znajduje się w pliku: \verb|SourceCode/src/gen_config.c|,  \\ zdefiniowany 
 \textbf{Ten fragment ma chyba za długie zdanie złożone??? Pytanie też czy dawać te wstawki, gdzie jest kod.}
 Z powodu prostoty i efektywności zaimplementowany został algorytm generujacy konfiguracje leksykograficznie. Patrząc na jego schemat abstrakcyjnie, generuje on $d + 1$ - poziomowe drzewo, ktorego węzły reprezentują pozostałą przestrzeń, krawędzie ile elementów danego typu (poziomu), zaczynając od najdłuższego, mieści się w konfiguracji, która jest czytana jako wartości wezłów na ścieżce od korzenia (długośc belki) do liścia (pozostała finalnie przestrzeń).
 Szczegółowy opis tej metody można przeczytać w pracy Saad M.A. Sulimana \textit{Pattern generating procedure for the cutting stock problem} \cite{GEN_CONFIGS}. \\
-\subsection{Macierz ograniczeń}
+
+\subsection{Macierz ograniczeń} \label{macierz_ograniczen}
 Do przechowywania wygenerowanych w opisany wyżej sposób danych, wykorzystane zostało wywołanie API solvera GLPK zdefiniowane następująco: \\
 \verb|void glp_set_mat_col(glp_prob *P, int j, int len, const int *ind, const double *val)| \\
 Z opisu w dokumentacji \cite{GLPK_DOCS} można dowiedzieć się, że:
 \begin{itemize}
 	\item \textbf{P*} - wskaźnik na obiekt będący instancją problemu
 	\item \textbf{len} - $0 \leq len \leq m$, gdzie $m$ to długość $j$-tej kolumny, w naszym przypadku $m = d$
-	\item \textbf{ind*} - wskażnik na tablicę indeksów, przykładowo, gdy ind[$i$] = $k$, wtedy val[$i$] będzie w $k$-tym wierszu $j$-tej kolumny macierzy ograniczeń
+	\item \textbf{ind*} - wskażnik na tablicę indeksów, przykładowo, gdy ind[$i$] = $k$, wtedy val[$i$] będzie w $k$-tym wierszu $\mathbf{j}$-tej kolumny macierzy ograniczeń
 	\item \textbf{val*} - wskażnik na tablicę wartośći
 \end{itemize}
 \textbf{val} i \textbf{ind} powinny mieć rozmiar len+1, ponieważ numeracja indeksów w bibliotece GLPK rozpoczyna się od jedynki, w przeciwieństwie do numeracji w języku C, rozpoczynającej się od zera. \\
@@ -67,6 +68,63 @@ ind[2] = 2; val[2] = col.config[1]; \\
 ind[5] = 5; val[3] = col.config[4]; \\
 
 Przy wielu instancjach PCB może okazać się, że finalna macierz ograniczeń ma postać macierzy rzadkiej, czyli takiej w której większość elementów ma wartość zero. Dlatego wartym wpomnienia jest fakt, że nie trzeba obawiać się wpisywania zer w tablicę val, ponieważ macierz ograniczeń w GLPK została zaimplementowana w taki sposób, iż zapamiętuje jedynie niezerowe wartośći, cytując dokumentację: \textit{Zero elements are allowed, but they are not stored in the constraint matrix}. To pozytywnie wpływa na zużycie pamięci operacyjnej jak również na prędkość wywoływanych z macierzą jako argumentem algorytmów. W kodzie źródłowym biblioteki można znaleźć opis implementacji tego mechanizmu \cite{GLPK_SRC}.
+
+\subsection{Nakładanie ograniczeń}
+Kolejnym krokiem w uzupełnieniu danych potrzebnych solverowi jest nałożenie ograniczeń na  wiersze i/lub kolumny. W tym przypadku na $d$ wierszy zostały nałożone  ograniczenia dolne, ktore odpowiadają wartościom po prawej stronie znaków nierówności z formuły (wymaganej liczbie elementów danego typu). 
+Odpowiada za to funkcja: \\
+\verb|void glp_set_row_bnds(glp_prob *P, int i, int type, double lb, double ub)|
+\begin{itemize}
+	\item \textbf{P*} - to samo co wcześniej
+	\item \textbf{i} - numer wiersza na który nałożone mają zostać ograniczenia
+	\item \textbf{type} - typ ograniczenia, nas interesuje wartość numeryczna GLP\_LO, czyli ograniczenie dolne, wtedy dla zmiennej pomocniczej związanej z $i$-tym wierszem wygląda to tak: $\mathbf{lb} \leq x \le +\infty$
+	\item \textbf{lb} - wartość ograniczenia dolnego
+	\item \textbf{ub} - wartość ograniczenia górnego
+\end{itemize}
+\textbf{Co z ograniczeniami kolumn? Bez wywołania} \verb|glp_set_col_bnds(lp, j, GLP_LO, 0.0, 0.0);| \textbf{nie działa program}.
+
+\subsection{Typ zmiennych}
+Również w przypadku MIP można dać znać solverowi od których zmiennych wymagamy, aby były całkowite. W naszym przypadku są to wszystkie, a jest ich tyle ile kolumn (konfiguracji).
+Potrzebne jest wywołanie funkcji:
+\verb|void glp_set_col_kind(glp_prob *P, int j, int kind)|
+
+\begin{itemize}
+	\item \textbf{P*} - to samo co wcześniej
+	\item \textbf{j} - numer kolumny której rodzaj ma być zmieniony
+	\item \textbf{kind} - rodzaj kolumny, wartość GLP\_IV odpowiada za typ całkowity
+\end{itemize}
+
+\subsection{Funkcja celu}
+Kierunek optymalizaji (minimalizacja czy maksymalizacja) można ustawić wywołując funkcję: \\
+\verb|void glp_set_obj_dir(glp_prob *P, int dir)| \\
+\textbf{dir} jest w stanie przyjąć wartości kryjące sie pod stałymi: \\
+GLP\_MIN - minimalizacja \\
+GLP\_MAX - maksymalizacja \\
+
+Za ustawienie współczynników $j$-tej zmiennej w funkcji celu odpowiada funkcja: \\
+\verb|void glp_set_obj_coef(glp_prob *P, int j, double coef)| \\
+W tym przypadku wszystkim zmiennym zostają nadane współczynniki równe jeden.
+
+\subsection{Metody rozwiązujące problem}
+Teraz pozostaje, tak opisany w programie, problem rozwiązć. GLPK do rozwiązywania problemów MIP używa solvera opartego na metodzie branch-and-cut, która jest hybrydą metod branch-and-bound i cutting plane. 
+\textbf{To trzebaby poprawić pod bardziej formalne?} \\
+Metoda ta polega na wstępnej relaksacji ograniczeń całkowitych, znalezieniu rozwiązania pochodnego i takiej jego modyfikacji by spełniała oryginalne sformułowanie (z ograniczeniami całkowitymi).
+
+
+Wstępne poluzowanie ograniczeń i znalezenie rozwiązania optymalnego dla powstałego problemu pochodnego można osiagnąc poprzez włącznie \textit{presolvera}, który to wywołuje metodę sympleksową.
+Wywołanie może wyglądać tak:
+\begin{lstlisting}[language=C]
+	glp_iocp mip_parm;          // zmienna odpowiadająca za parametry MIP
+	glp_init_iocp(&mip_parm);   // inicjuje domyślne parametry
+	mip_parm.presolve = GLP_ON; // włączenie presolvera
+	glp_intopt(lp, &mip_parm);  // wywołanie solvera MIP
+\end{lstlisting}
+
+Gdy solver znajdzie optymalne rozwiązanie pozostaje jeszcze uzyskanie składających się na nie zmiennych. Posłuży do tego funkcja:
+\verb|double glp_mip_col_val(glp_prob *P, int j)|, która zwraca wartość zmiennej związanej z $j$-tą kolumną. 
+
+Interesujące nas rozwiązanie to niezerowe wartości uzyskane powyższą funkcją, które odpowiadają liczbie potrzebnych konfiguracji o indeksie $j$. Możemy je odzyskać, używając funkcji: \\
+\verb|int glp_get_mat_col(glp_prob *P, int j, int ind[], double val[])|, \\
+która zwróci dwie tablice, które mają strukturę analogiczną jak w przypadku umieszczania konfiguracji w instancji problemu (patrz \ref{macierz_ograniczen}). 
 
 
 

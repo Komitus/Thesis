@@ -47,7 +47,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 	// glpk starts indexing from 1
 	for (size_t j = 1; j <= numOfCols; j++)
 	{
-		glp_set_col_bnds(lp, j, GLP_LO, 0.0, 0.0); //-- mam jakieś ograniczenia na kolumny (variables)?
+		glp_set_col_bnds(lp, j, GLP_LO, 0.0, 0.0); // ograniczenia dolne na 0
 		glp_set_col_kind(lp, j, GLP_IV);
 		glp_set_obj_coef(lp, j, 1.0);
 	}
