@@ -10,7 +10,7 @@
 #define FAIL_STATUS -1
 #define SUCCES_STATUS 0
 
-#define LOGGING
+//#define LOGGING
 
 #ifdef LOGGING
 #define DEBUG_LOG(fmt, ...)                \

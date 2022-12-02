@@ -21,8 +21,7 @@ static int handle_console_args(int argc, char *const *argv, IO_Info *io_info);
 static int open_file(IO_Info *io_info, const char *flags);
 static int read_input(ProblemInstance *input, FILE *inFile);
 static int read_obj_types_to_struct(ProblemInstance *input, FILE *inFile);
-static int print_arr_of_objs(ProblemInstance *input, uint8_t if_threshold, FILE *outFile);
-static size_t get_idx_of_treshold(ProblemInstance *input, double treshold);
+static int print_arr_of_objs(ProblemInstance *input, FILE *outFile);
 static int print_configs_from_vec(ProblemInstance *input, Vector *v, FILE *outFile);
 static const int _qsort_compare(const void *a, const void *b);
 
@@ -44,7 +43,7 @@ int run_program(int argc, char *const *argv)
             fclose(io_info->inFile) == 0 &&
             ((input->minNumbOfStocks = get_min_numb_of_stocks(input)) > 0) &&
             open_file(io_info, "w") != FAIL_STATUS &&
-            print_arr_of_objs(input, 0, io_info->outFile) != FAIL_STATUS)
+            print_arr_of_objs(input, io_info->outFile) != FAIL_STATUS)
         {
             fprintf(io_info->outFile, "SELECTED ALGO: ");
             if (io_info->options & APPROX)
@@ -76,8 +75,9 @@ int run_program(int argc, char *const *argv)
                     fprintf(stderr, "MEMORY ERROR\n");
                 }
             }
-            else
-            {
+            else    
+            {   
+                fprintf(io_info->outFile, "MIP\n");
                 glp_prob *lp = glp_create_prob(); // freeing in solver
                 gen_configs(input, io_info->outFile, lp);
                 retStatus = solver(input, io_info, lp);
@@ -305,59 +305,17 @@ static int read_obj_types_to_struct(ProblemInstance *input, FILE *inFile)
     return SUCCES_STATUS;
 }
 
-static size_t get_idx_of_treshold(ProblemInstance *input, double treshold)
-{
-    size_t lo = 0, hi = input->numOfTypes, result = __SIZE_MAX__;
-
-    if (input->numOfTypes == 0)
-    {
-        return SIZE_MAX;
-    }
-
-    if (treshold > input->arrOfObjs[lo].length)
-    {
-        return SIZE_MAX;
-    }
-
-    while (lo <= hi)
-    {
-        size_t mid = (hi + lo) / 2;
-
-        if (input->arrOfObjs[mid].length < treshold)
-        {
-            hi = mid - 1;
-        }
-        else
-        {
-            result = mid;
-            lo = mid + 1;
-        }
-    }
-    assert(input->arrOfObjs[result + 1].length < treshold);
-
-    return result;
-}
-
-static int print_arr_of_objs(ProblemInstance *input, uint8_t if_threshold, FILE *outFile)
+static int print_arr_of_objs(ProblemInstance *input, FILE *outFile)
 {
     if (input == NULL || outFile == NULL)
     {
         return FAIL_STATUS;
     }
 
-    size_t idx_of_threshold = 0;
-    if (if_threshold)
-    {
-        double threshold = input->stockLength / (double)(2 * input->numOfTypes - 1);
-        idx_of_threshold = get_idx_of_treshold(input, threshold);
-    }
-    fprintf(outFile, "\nStock length: %lu\n\n", input->stockLength);
-    if (if_threshold && idx_of_threshold != SIZE_MAX)
-    {
-        fprintf(outFile, "\"####\" indicates end of big objects\nidx of first small obj: %lu\n", idx_of_threshold);
-    }
-
-    const char *const strs[] = {"LENGTH:   |", "QUANTITY: |"};
+    fprintf(outFile, "STOCK_LENGTH: %lu\n", input->stockLength);
+    fprintf(outFile, "NUM_OF_TYPES: %lu\n", input->numOfTypes);
+ 
+    const char *const strs[] = {"LENGTH|", "QUANTITY|"};
 
     ObjWithQuantity *arrOfObjs = input->arrOfObjs;
     size_t n = sizeof(strs) / sizeof(strs[0]);
@@ -367,11 +325,6 @@ static int print_arr_of_objs(ProblemInstance *input, uint8_t if_threshold, FILE 
         for (size_t i = 0; i < input->numOfTypes; i++)
         {
             size_t val;
-
-            if (if_threshold && i == idx_of_threshold)
-            {
-                fprintf(outFile, " ####### |");
-            }
             if (paramIdx == 0)
             {
                 val = arrOfObjs[i].length;
@@ -380,10 +333,10 @@ static int print_arr_of_objs(ProblemInstance *input, uint8_t if_threshold, FILE 
             {
                 val = arrOfObjs[i].quantity;
             }
-            fprintf(outFile, " %3lu |", val);
+            fprintf(outFile, "%lu|", val);
         }
         fprintf(outFile, "\n");
-        for (size_t i = 0; i < input->numOfTypes * 8; i++)
+        for (size_t i = 0; i < input->numOfTypes * 6; i++)
         {
             fprintf(outFile, "-");
         }
@@ -403,14 +356,14 @@ static int print_configs_from_vec(ProblemInstance *input, Vector *v, FILE *outFi
     for (size_t i = 0; i < vector_size(v); i++)
     {
         size_t filled = 0;
-        fprintf(outFile, "S[%4lu]: ", i);
+        fprintf(outFile, "C[%3lu]", i);
         const StockConfig *stock = (const StockConfig *)v->items[i];
         for (size_t j = 0; j < input->numOfTypes; j++)
         {
             filled = filled + (input->arrOfObjs[j].length * stock->config[j]);
-            fprintf(outFile, "%4lu  ", stock->config[j]);
+            fprintf(outFile, "| %lu ", stock->config[j]);
         }
-        fprintf(outFile, "|-- %4lu\n", stock->spaceLeft);
+        fprintf(outFile, "|%% %4lu\n", stock->spaceLeft);
         assert(stock->spaceLeft == (input->stockLength - filled));
     }
     return SUCCES_STATUS;

@@ -33,9 +33,9 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 	int numOfCols = glp_get_num_cols(lp);
 	int matrixSize = numOfCols * numOfRows;
 
-	fprintf(io_info->outFile, "NUMBER OF COLUMNS (CONFIGS): %d\n", numOfCols);
-	fprintf(io_info->outFile, "NUMBER OF ROWS: %d\n", numOfRows);
-	fprintf(io_info->outFile, "Matrix size: %d\n", matrixSize);
+	fprintf(io_info->outFile, "NUMBER_OF_COLUMNS_(CONFIGS): %d\n", numOfCols);
+	fprintf(io_info->outFile, "NUMBER_OF_ROWS: %d\n", numOfRows);
+	fprintf(io_info->outFile, "MATRIX_SIZE: %d\n", matrixSize);
 
 	for (int i = 1; i <= numOfRows; i++)
 	{
@@ -52,7 +52,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 		glp_set_obj_coef(lp, j, 1.0);
 	}
 
-	fprintf(io_info->outFile, "NUMBER OF INT VARIABLES IN GLPK: %d\n", glp_get_num_int(lp));
+	fprintf(io_info->outFile, "NUMBER_OF_INT_VARIABLES_IN_GLPK: %d\n", glp_get_num_int(lp));
 
 	int solutionStatus;
 	glp_set_prob_name(lp, "SIMPLEX as presolver for MIP");
@@ -67,7 +67,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 
 	/* recover and display results */
 	fprintf(io_info->outFile, "-----------------------------------------------\n");
-	fprintf(io_info->outFile, "               STOCKS NEEDED = %g          	  \n", stocksNeeded);
+	fprintf(io_info->outFile, "               STOCKS NEEDED: %g          	  \n", stocksNeeded);
 	fprintf(io_info->outFile, "-----------------------------------------------\n");
 
 	int *ind = calloc(numOfRows + 1, sizeof(*ind));
@@ -84,7 +84,7 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 			memset(config, 0, sizeof(*config) * (numOfRows + 1));
 			spaceLeft = input->stockLength;
 			int len = glp_get_mat_col(lp, colIdx, ind, val);
-			fprintf(io_info->outFile, "C[%4d]: ", colIdx - 1);
+			fprintf(io_info->outFile, "C[%3d]", colIdx - 1);
 
 			for (int i = 1; i <= len; i++) // glpk gives column reversed
 			{
@@ -95,10 +95,10 @@ int solver(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 			}
 			for (int i = 1; i <= numOfRows; i++)
 			{
-				fprintf(io_info->outFile, " | %3g ", config[i]);
+				fprintf(io_info->outFile, "| %g ", config[i]);
 				objsQuantities[i - 1] += (config[i] * x);
 			}
-			fprintf(io_info->outFile, " |--- %3g | %3g times \n", spaceLeft, x);
+			fprintf(io_info->outFile, "|%% %3g |x %g\n", spaceLeft, x);
 		}
 	}
 
