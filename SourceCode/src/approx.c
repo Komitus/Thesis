@@ -1,7 +1,9 @@
 #include "approx.h"
 #include <stdio.h>
 #include <stdint.h>
-
+#ifdef TEST_ON
+#include <assert.h>
+#endif
 #include "io_handler.h"
 
 size_t get_min_numb_of_stocks(ProblemInstance *input)
@@ -56,4 +58,28 @@ size_t approx(ProblemInstance *input, Vector *v)
         }
     }
     return vector_size(v);
+}
+
+void check_approx(Vector *v, size_t numOfTypes, size_t *objQuantities)
+{
+    for (size_t i = 0; i < vector_size(v); i++)
+    {
+        StockConfig *col = vector_get(v, i);
+        for (size_t j = 0; j < numOfTypes; j++)
+        {
+            if (objQuantities[j] > col->config[i])
+            {
+                objQuantities[j] -= col->config[i];
+            }
+            else
+            {
+                objQuantities[j] = 0;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < numOfTypes; i++)
+    {
+        assert(objQuantities[i] == 0);
+    }
 }

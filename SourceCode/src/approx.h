@@ -9,3 +9,4 @@
  */
 size_t approx(ProblemInstance *input, Vector *v);
 size_t get_min_numb_of_stocks(ProblemInstance *input);
+void check_approx(Vector *v, size_t numOfTypes, size_t *objQuantities);

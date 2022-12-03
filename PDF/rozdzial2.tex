@@ -19,12 +19,12 @@ Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można 
 		\begin{tabular}{ p{5cm}p{2cm}p{7cm} }
 			\multicolumn{3}{l}{$\beta$ (długość belki)} \\
 			\multicolumn{3}{l}{$d$ (liczba różnych długości - rodzajów elementów)} \\
-			$p_1$ (długość elementu 1) & space & $n_1$ (potrzebna liczba sztuk elementu 1)\\
-			$p_2$ & space & $n_2$ \\
+			$p_1$ (długość elementu 1) &  \texttt{\char32} & $n_1$ (potrzebna liczba sztuk elementu 1)\\
+			$p_2$ &  \texttt{\char32}  & $n_2$ \\
 			\vdots & \vdots & \vdots \\
-			$p_d$ & space & $n_d$ \\
+			$p_d$ &  \texttt{\char32} & $n_d$ \\
 		\end{tabular}
-		\caption{Format danych wejściowych. Każdy wiersz to nowa linia. Space oznacza spację.}
+		\caption{Format danych wejściowych. Każdy wiersz to nowa linia, ``\texttt{\char32}`` oznacza białe znaki }
 	\end{center}
 \end{table}
 Dane wejściowe są zapisywane do struktury \textit{ProblemInstance}, która zawiera w sobie tablicę sturktur typu \textit{ObjWithQuantity}(jej polami przechowują $p_i$, $n_i$). Ta druga sortowana jest według długości obiektów w kolejnośći nierosnącej algorytmem quicksort.

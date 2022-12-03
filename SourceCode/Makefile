@@ -3,7 +3,7 @@
 TARGET   = main
 CC       = gcc
 # compiling flags here
-CFLAGS   = -std=c17 -Wall -g
+CFLAGS   = -std=c17 -Wall -O3 #-g
 
 LINKER   = gcc
 # linking flags here
@@ -35,4 +35,12 @@ clean:
 remove: clean
 	@$(rm) $(BINDIR)/$(TARGET)
 	@echo "Executable removed!"
+	
+# TEST PART
+TESTS_DIR = tests
+run_test: 
+	@$(TESTS_DIR)/run_tests.sh
+	
+  
+	
 

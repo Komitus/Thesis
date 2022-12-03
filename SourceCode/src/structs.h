@@ -10,9 +10,8 @@
 #define FAIL_STATUS -1
 #define SUCCES_STATUS 0
 
-//#define LOGGING
-
-#ifdef LOGGING
+#define TEST_ON
+#ifdef DEBUG_ON
 #define DEBUG_LOG(fmt, ...)                \
     do                                     \
     {                                      \
@@ -25,10 +24,10 @@
 #define NO_OPTION 0x0
 #define FROM_FILE 0x01
 #define TO_FILE 0x02
-#define QUIET_MODE 0x04
 #define FOREACH_ALGO(ALGO) \
-    ALGO(APPROX = 0x08)    \
-    ALGO(MIP = 0x10)
+    ALGO(APPROX = 0x04)    \
+    ALGO(MIP = 0x08) \
+    ALGO(SM = 0x10) 
 
 #define GENERATE_ENUM(ENUM) ENUM,
 

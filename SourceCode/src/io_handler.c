@@ -11,7 +11,7 @@
 #include "approx.h"
 #include "gen_configs.h"
 
-static size_t ALGO_ENUM_ARR[] = {APPROX, MIP}; // see structs.h
+static size_t ALGO_ENUM_ARR[] = {APPROX, MIP, SM}; // see structs.h
 
 #define GENERATE_STRING(STRING) #STRING,
 static const char *ALGO_STRING[] = {
@@ -56,8 +56,8 @@ int run_program(int argc, char *const *argv)
                     size_t stocksNeeded = approx(input, vec);
                     if (stocksNeeded != SIZE_MAX)
                     {
-                        print_configs_from_vec(input, vec, io_info->outFile);
                         fprintf(io_info->outFile, "STOCKS NEEDED: %lu\n", stocksNeeded);
+                        print_configs_from_vec(input, vec, io_info->outFile);
                     }
                     else
                     {
@@ -75,14 +75,46 @@ int run_program(int argc, char *const *argv)
                     fprintf(stderr, "MEMORY ERROR\n");
                 }
             }
-            else    
-            {   
-                fprintf(io_info->outFile, "MIP\n");
+            else
+            {
                 glp_prob *lp = glp_create_prob(); // freeing in solver
                 gen_configs(input, io_info->outFile, lp);
-                retStatus = solver(input, io_info, lp);
-                glp_delete_prob(lp);
-                glp_free_env();
+                retStatus = solve(input, io_info, lp);
+
+                if (io_info->options & SM)
+                {
+#ifdef TEST_ON
+                    size_t *objsQuantities = calloc(input->numOfTypes, sizeof(*objsQuantities));
+                    for (size_t i = 0; i < input->numOfTypes; i++)
+                    {
+                        objsQuantities[i] = input->arrOfObjs[i].quantity;
+                    }
+#endif
+                    Vector *v = get_SM_solution(input, io_info, lp);
+                    glp_delete_prob(lp);
+                    glp_free_env();
+                    size_t stocksNeeded = approx(input, v);
+#ifdef TEST_ON
+                    check_approx(v, input->numOfTypes, objsQuantities);
+                    free(objsQuantities);
+#endif
+                    if (stocksNeeded != SIZE_MAX)
+                    {
+                        fprintf(io_info->outFile, "STOCKS NEEDED: %lu\n", stocksNeeded);
+                        print_configs_from_vec(input, v, io_info->outFile);
+                    }
+                    for (size_t i = 0; i < vector_size(v); i++)
+                    {
+                        free(v->items[i]);
+                    }
+                    vector_free(v);
+                }
+                else
+                {
+                    print_MIP_solution(input, io_info, lp);
+                    glp_delete_prob(lp);
+                    glp_free_env();
+                }
             }
             if (io_info->outFile != stdout)
             {
@@ -115,7 +147,7 @@ static int handle_console_args(int argc, char *const *argv, IO_Info *io_info)
 
     int c;
     opterr = 0;
-    while ((c = getopt(argc, argv, "f:o:a:hq")) != -1)
+    while ((c = getopt(argc, argv, "f:o:a:h")) != -1)
     {
         switch (c)
         {
@@ -138,11 +170,8 @@ static int handle_console_args(int argc, char *const *argv, IO_Info *io_info)
                 }
             }
             break;
-        case 'q':
-            io_info->options |= QUIET_MODE;
-            break;
         case 'h':
-            fprintf(stderr, "Avail flags:\n-f <in_filename.txt>\n-o <out_filename.txt>-q (quiet mode - no configs)\n");
+            fprintf(stderr, "Avail flags:\n-f <in_filename.txt>\n-o <out_filename.txt>\n");
             fprintf(stderr, "-a <ALGO> ALGOS: \n");
             for (size_t i = 0; i < sizeof(ALGO_STRING) / sizeof(ALGO_STRING[0]); i++)
             {
@@ -247,7 +276,7 @@ static int read_obj_types_to_struct(ProblemInstance *input, FILE *inFile)
     {
         if (fgets(line, sizeof(line), inFile))
         {
-            if (2 == sscanf(line, "%lu %lu", &p_i, &n_i))
+            if (2 == (sscanf(line, "%lu%*[\t ]%lu", &p_i, &n_i)))
             {
                 if (p_i > input->stockLength)
                 {
@@ -314,7 +343,9 @@ static int print_arr_of_objs(ProblemInstance *input, FILE *outFile)
 
     fprintf(outFile, "STOCK_LENGTH: %lu\n", input->stockLength);
     fprintf(outFile, "NUM_OF_TYPES: %lu\n", input->numOfTypes);
- 
+    fprintf(outFile, "NUM_OF_ALL_OBJS: %lu\n", input->numOfAllObjs);
+    fprintf(outFile, "LOWER_STOCK_NUM_BOUND: %lu\n", input->minNumbOfStocks);
+
     const char *const strs[] = {"LENGTH|", "QUANTITY|"};
 
     ObjWithQuantity *arrOfObjs = input->arrOfObjs;

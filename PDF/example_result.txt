@@ -1,5 +1,7 @@
 STOCK_LENGTH: 5600
 NUM_OF_TYPES: 13
+NUM_OF_ALL_OBJS: 219
+LOWER_STOCK_NUM_BOUND: 73
 LENGTH|2200|2150|2140|2100|2050|2000|1930|1880|1820|1710|1560|1520|1380|
 ------------------------------------------------------------------------------
 QUANTITY|20|18|16|14|12|10|20|18|18|14|12|25|22|
@@ -10,10 +12,8 @@ NUMBER_OF_COLUMNS_(CONFIGS): 213
 NUMBER_OF_ROWS: 13
 MATRIX_SIZE: 2769
 NUMBER_OF_INT_VARIABLES_IN_GLPK: 213
-SOLUTION STATUS MIP: GLP_OPT
------------------------------------------------
-               STOCKS NEEDED: 73          	  
------------------------------------------------
+SOLUTION STATUS: GLP_OPT
+STOCKS NEEDED: 73
 C[  5]| 1 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 |%  20 |x 2
 C[  6]| 1 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 1 |%  90 |x 1
 C[  7]| 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 | 0 |%   0 |x 14
