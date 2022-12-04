@@ -9,7 +9,7 @@
 
 #include "io_handler.h"
 #include "approx.h"
-#include "gen_configs.h"
+#include "solver_part.h"
 
 static size_t ALGO_ENUM_ARR[] = {APPROX, MIP, SM}; // see structs.h
 
@@ -172,13 +172,13 @@ static int handle_console_args(int argc, char *const *argv, IO_Info *io_info)
             break;
         case 'h':
             fprintf(stderr, "Avail flags:\n-f <in_filename.txt>\n-o <out_filename.txt>\n");
-            fprintf(stderr, "-a <ALGO> ALGOS: \n");
+            fprintf(stderr, "-a <ALGO>\n\tAVAIL ALGOS: \n");
             for (size_t i = 0; i < sizeof(ALGO_STRING) / sizeof(ALGO_STRING[0]); i++)
             {
                 int len = strcspn(ALGO_STRING[i], "=");
-                fprintf(stderr, "\t%.*s\n", len, ALGO_STRING[i]);
+                fprintf(stderr, "\t* %.*s\n", len, ALGO_STRING[i]);
             }
-            return FAIL_STATUS;
+            exit(0);
             break;
         case '?':
             if (optopt == 'f')

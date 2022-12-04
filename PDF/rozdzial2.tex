@@ -1,14 +1,58 @@
 \chapter{Implementacja}
 \thispagestyle{chapterBeginStyle}
 
-Przedmiotem tego rozdziału będzie opis implementacji dwóch podprogramów realizujących: 
+Przedmiotem tego rozdziału będzie opis implementacji trzech podprogramów realizujących: 
 \begin{enumerate}
 	\item aproksymacyjny algorytm First Fit Decreasing 
-	\item sformułowanie liniowe z sekcji \ref{linear_formula}.	
+	\item sformułowanie liniowe z sekcji \ref{linear_formula} - dwie metody:
+	\begin{enumerate}
+		\item metoda MIP
+		\item naiwna - zaokrągalanie rozwiązania zwróconego przez metodę simpleksową
+	\end{enumerate}
+	 
 \end{enumerate}
 
-Obydwa zostały zaimplementowane w języku C, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego solver GLPK zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
-Zrealizowano je w postaci programu konsolowego, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0.
+Wszystkie trzy zostały zaimplementowane w języku \textbf{C}, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego \textbf{solver GLPK} zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
+Zrealizowano je w postaci programu konsolowego, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0. 
+Procesem kompilacji zarządza narzędzie \textbf{Makefile}.
+Struktura projektu zawartego na dołączonej płycie CD prezentuje się następująco:
+
+\dirtree{%
+	.1 SourceCode.
+	.2 Makefile.
+	.2 bin.
+	.3 main.
+	.2 obj.
+	.2 src.
+	.3 approx.c.
+	.3 approx.h.
+	.3 gen\_configs.c.
+	.3 io\_handler.c.
+	.3 io\_handler.h.
+	.3 main.c.
+	.3 solver\_part.c.
+	.3 solver\_part.h.
+	.3 structs.h.
+	.3 vector.c.
+	.3 vector.h.	
+}
+
+Program analizuje argumenty wiersza poleceń w stylu UNIX/Posix (funkcja getopt), stad systemy z nim zgodne powinny być obierane jako platforma docelowa kompilacji. Niezbędna też jest obecność plików nagłówkowych, statyczny, współdzielonych bibliotek solvera GLPK. Instrukcję jak zainstalować niezbędny pakiet moża znaleźć pod tym linkiem: \href{https://en.wikibooks.org/wiki/GLPK/Linux_OS}{instrukcja instalacji GLPK}.
+
+\newpage
+Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą h: ``\verb|SourceCode/bin/main -h|``, wtedy zostanie wyświetlony następujacy komunikat:
+
+\begin{lstlisting}
+	Avail flags:
+	-f <in_filename.txt>
+	-o <out_filename.txt>
+	-a <ALGO>
+		AVAIL ALGOS: 
+		* APPROX 
+		* MIP 
+		* SM 
+\end{lstlisting}
+
 
 \section{Dane wejściowe}
 Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
@@ -105,9 +149,9 @@ Dla wierszy odpowiada za to funkcja: \\
 	\item \textbf{ub} - wartość ograniczenia górnego
 \end{itemize}
 Analogicznie wygląda to dla kolumn: \\
-\verb|void glp set col bnds(glp prob *P, int j, int type, double lb, double ub)|
+\verb|void glp_set_col_bnds(glp prob *P, int j, int type, double lb, double ub)|
 
-\subsection{Typ zmiennych}
+\subsection{Typ zmiennych}\label{typ_zmiennych}
 Również w przypadku MIP można dać znać solverowi od których zmiennych wymagamy, aby były całkowite. W naszym przypadku są to wszystkie, a jest ich tyle ile kolumn (konfiguracji).
 Potrzebne jest wywołanie funkcji:
 \verb|void glp_set_col_kind(glp_prob *P, int j, int kind)|
@@ -130,10 +174,14 @@ Za ustawienie współczynników $j$-tej zmiennej w funkcji celu odpowiada funkcj
 W tym przypadku wszystkim zmiennym zostają nadane współczynniki równe jeden.
 
 \subsection{Metody rozwiązujące problem}
-Teraz pozostaje, tak opisany w programie, problem rozwiązć. GLPK do rozwiązywania problemów MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. 
+Teraz pozostaje, tak opisany w programie, problem rozwiązć. 
+Inicjalizajca obydwu metod (MIP i nawinej) do tego momentu przebiegała tak samo (z tym, że w tej drugiej nie trzeba nakładać ograniczenia calkowitoliczbowego na zmienne). 
+
+\subsubsection{MIP}
+GLPK do rozwiązywania problemów MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. 
 Metoda ta polega na wstępnej relaksacji ograniczeń całkowitych, znalezieniu rozwiązania pochodnego i takiej jego modyfikacji by spełniała oryginalne sformułowanie (z ograniczeniami całkowitymi).
 
-Wstępne poluzowanie ograniczeń i znalezenie rozwiązania optymalnego dla powstałego problemu pochodnego można osiagnąc poprzez włącznie \textit{presolvera}, który to wywołuje metodę \textit{sympleksową}.
+
 Wywołanie może wyglądać tak:
 \begin{lstlisting}[language=C]
 	// lp - wskaźnik na zmienną typu glp_prob
@@ -143,6 +191,7 @@ Wywołanie może wyglądać tak:
 	glp_intopt(lp, &mip_parm);  // wywołanie solvera MIP
 \end{lstlisting}
 
+W metodzie naiwnej nie trzeba nakładać ograniczeń na typ zmiennych (\ref{typ_zmiennych}). Sam proces jest ma wspó
 
 \subsection{Odzyskanie rozwiązania}
 Funkcja \verb|int glp_mip_status(glp_prob *P)| informuje o stanie rozwiązania MIP znalezionego przez solver MIP. Gdy zwróci GLP\_OPT - rozwiązanie jest optymalne pod względem liczby całkowitej. \\

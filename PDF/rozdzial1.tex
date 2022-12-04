@@ -80,7 +80,7 @@ Wycinanie elementów z belki, będzie tu traktowane jako dokładanie elementów 
 Algorytm jest opisany następująco:
 
 
-\begin{algorithm}[H]
+\begin{pseudokod}[H]
 	\KwData{Lista elementów różnej długości.}
 	\KwResult{Upakowanie - ułożenie elementów w koszach tak, aby suma rozmiarów elementów w każdym koszy była równa, co najwyżej pojemności kosza.}
 	Posortowanie elementów w kolejności nierosnącej \;
@@ -90,9 +90,8 @@ Algorytm jest opisany następująco:
 		\Else{Otwórz nowy kosz i dołóż do niego element}	
 	}
 	
-	\caption{First Fit Decreasing - pseudokod}
-\end{algorithm}
-
+	\caption{First Fit Decreasing}
+\end{pseudokod}
 
 \section{Algorytm OPT+1}
 Opis algorytmu, który pierwotnie miał zostać zaimplementowany w niniejszej pracy, można znaleźć w dokumencie z 2011 roku, \textit{A Polynomial Time OPT + 1 Algorithm for the Cutting Stock Problem with a Constant Number of Object Lengths} \cite{ALG_OPT_1}. 

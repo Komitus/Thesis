@@ -1,4 +1,4 @@
-#include "gen_configs.h"
+#include "solver_part.h"
 #include <string.h>
 #include <assert.h>
 #include <math.h>

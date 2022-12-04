@@ -1,7 +1,4 @@
 #include "io_handler.h"
-#include "approx.h"
-#include "gen_configs.h"
-#include <float.h>
 
 int main(int argc, char **argv)
 {
