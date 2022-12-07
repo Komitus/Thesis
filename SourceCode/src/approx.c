@@ -60,6 +60,31 @@ size_t approx(ProblemInstance *input, Vector *v)
     return vector_size(v);
 }
 
+int print_configs_from_vec(ProblemInstance *input, Vector *v, FILE *outFile)
+{
+    if (input == NULL || outFile == NULL)
+    {
+        return FAIL_STATUS;
+    }
+    size_t stocksNeeded = vector_size(v);
+    fprintf(outFile, "STOCKS_NEEDED: %lu\n", stocksNeeded);
+
+    for (size_t i = 0; i < stocksNeeded; i++)
+    {
+        size_t filled = 0;
+        fprintf(outFile, "C[%3lu]", i);
+        const StockConfig *stock = (const StockConfig *)v->items[i];
+        for (size_t j = 0; j < input->numOfTypes; j++)
+        {
+            filled = filled + (input->arrOfObjs[j].length * stock->config[j]);
+            fprintf(outFile, "| %lu ", stock->config[j]);
+        }
+        fprintf(outFile, "|%% %4lu\n", stock->spaceLeft);
+        assert(stock->spaceLeft == (input->stockLength - filled));
+    }
+    return SUCCES_STATUS;
+}
+
 void check_approx(Vector *v, size_t numOfTypes, size_t *objQuantities)
 {
     for (size_t i = 0; i < vector_size(v); i++)
@@ -67,9 +92,9 @@ void check_approx(Vector *v, size_t numOfTypes, size_t *objQuantities)
         StockConfig *col = vector_get(v, i);
         for (size_t j = 0; j < numOfTypes; j++)
         {
-            if (objQuantities[j] > col->config[i])
+            if (objQuantities[j] > col->config[j])
             {
-                objQuantities[j] -= col->config[i];
+                objQuantities[j] -= col->config[j];
             }
             else
             {

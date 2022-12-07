@@ -8,8 +8,8 @@
 #include <assert.h>
 
 #include "io_handler.h"
-#include "approx.h"
 #include "solver_part.h"
+#include "approx.h"
 
 static size_t ALGO_ENUM_ARR[] = {APPROX, MIP, SM}; // see structs.h
 
@@ -22,7 +22,6 @@ static int open_file(IO_Info *io_info, const char *flags);
 static int read_input(ProblemInstance *input, FILE *inFile);
 static int read_obj_types_to_struct(ProblemInstance *input, FILE *inFile);
 static int print_arr_of_objs(ProblemInstance *input, FILE *outFile);
-static int print_configs_from_vec(ProblemInstance *input, Vector *v, FILE *outFile);
 static const int _qsort_compare(const void *a, const void *b);
 
 int run_program(int argc, char *const *argv)
@@ -45,7 +44,7 @@ int run_program(int argc, char *const *argv)
             open_file(io_info, "w") != FAIL_STATUS &&
             print_arr_of_objs(input, io_info->outFile) != FAIL_STATUS)
         {
-            fprintf(io_info->outFile, "SELECTED ALGO: ");
+            fprintf(io_info->outFile, "SELECTED_ALGO: ");
             if (io_info->options & APPROX)
             {
                 fprintf(io_info->outFile, "APPROX\n");
@@ -56,7 +55,6 @@ int run_program(int argc, char *const *argv)
                     size_t stocksNeeded = approx(input, vec);
                     if (stocksNeeded != SIZE_MAX)
                     {
-                        fprintf(io_info->outFile, "STOCKS NEEDED: %lu\n", stocksNeeded);
                         print_configs_from_vec(input, vec, io_info->outFile);
                     }
                     else
@@ -77,44 +75,12 @@ int run_program(int argc, char *const *argv)
             }
             else
             {
-                glp_prob *lp = glp_create_prob(); // freeing in solver
-                gen_configs(input, io_info->outFile, lp);
-                retStatus = solve(input, io_info, lp);
-
                 if (io_info->options & SM)
-                {
-#ifdef TEST_ON
-                    size_t *objsQuantities = calloc(input->numOfTypes, sizeof(*objsQuantities));
-                    for (size_t i = 0; i < input->numOfTypes; i++)
-                    {
-                        objsQuantities[i] = input->arrOfObjs[i].quantity;
-                    }
-#endif
-                    Vector *v = get_SM_solution(input, io_info, lp);
-                    glp_delete_prob(lp);
-                    glp_free_env();
-                    size_t stocksNeeded = approx(input, v);
-#ifdef TEST_ON
-                    check_approx(v, input->numOfTypes, objsQuantities);
-                    free(objsQuantities);
-#endif
-                    if (stocksNeeded != SIZE_MAX)
-                    {
-                        fprintf(io_info->outFile, "STOCKS NEEDED: %lu\n", stocksNeeded);
-                        print_configs_from_vec(input, v, io_info->outFile);
-                    }
-                    for (size_t i = 0; i < vector_size(v); i++)
-                    {
-                        free(v->items[i]);
-                    }
-                    vector_free(v);
-                }
+                    fprintf(io_info->outFile, "SM\n");
                 else
-                {
-                    print_MIP_solution(input, io_info, lp);
-                    glp_delete_prob(lp);
-                    glp_free_env();
-                }
+                    fprintf(io_info->outFile, "MIP\n");
+
+                retStatus = solve_with_GLPK(input, io_info);
             }
             if (io_info->outFile != stdout)
             {
@@ -377,35 +343,13 @@ static int print_arr_of_objs(ProblemInstance *input, FILE *outFile)
     return SUCCES_STATUS;
 }
 
-static int print_configs_from_vec(ProblemInstance *input, Vector *v, FILE *outFile)
-{
-    if (input == NULL || outFile == NULL)
-    {
-        return FAIL_STATUS;
-    }
-
-    for (size_t i = 0; i < vector_size(v); i++)
-    {
-        size_t filled = 0;
-        fprintf(outFile, "C[%3lu]", i);
-        const StockConfig *stock = (const StockConfig *)v->items[i];
-        for (size_t j = 0; j < input->numOfTypes; j++)
-        {
-            filled = filled + (input->arrOfObjs[j].length * stock->config[j]);
-            fprintf(outFile, "| %lu ", stock->config[j]);
-        }
-        fprintf(outFile, "|%% %4lu\n", stock->spaceLeft);
-        assert(stock->spaceLeft == (input->stockLength - filled));
-    }
-    return SUCCES_STATUS;
-}
-
 static int open_file(IO_Info *io_info, const char *flags)
 {
     if (strcmp(flags, "r") == 0 && (io_info->options & FROM_FILE))
     {
         if ((io_info->inFile = fopen(io_info->inFilename, "r")) == NULL)
         {
+            fprintf(stderr, "Maybe no such input file\n");
             return FAIL_STATUS;
         }
     }

@@ -21,7 +21,7 @@ if [ ! -f $EXEC_FILE ]; then
     exit 
 fi
 
-ALGOS=("APPROX" "MIP" "SM")
+ALGOS=("APPROX" "SM" "MIP")
 
 for infile in $INPUT_DIR/*.txt; do
     tmp=$(basename -- "$infile")

@@ -6,8 +6,8 @@ Przedmiotem tego rozdziału będzie opis implementacji trzech podprogramów real
 	\item aproksymacyjny algorytm First Fit Decreasing 
 	\item sformułowanie liniowe z sekcji \ref{linear_formula} - dwie metody:
 	\begin{enumerate}
-		\item metoda MIP
-		\item naiwna - zaokrągalanie rozwiązania zwróconego przez metodę simpleksową
+		\item naiwna - releksacja IP do odpowiadającego LP (Linear Programming) i zaokrąglenie rozwiązania (algorytm simpleks i FFD)
+		\item MIP - algorytm branch and cut
 	\end{enumerate}
 	 
 \end{enumerate}
@@ -54,7 +54,7 @@ Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą 
 \end{lstlisting}
 
 
-\section{Dane wejściowe}
+\section{Dane wejściowe} \label{format_danych}
 Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
 
 
@@ -104,7 +104,7 @@ Następna wewętrzna iteruje tyle razy ile wynosi liczba potrzebnych elementu da
 Ostatnia, najgłębiej zagnieżdżona, przechodzi po dynamicznie zaalokowanej tablicy (zmienna typu \textit{Vector}) \textit{otwartych} belek, zaczynąjąc od tego do którego ostatniego mieścił się element danego typu. Pozwala to uniknąć niepotrzbnego sprawdzania belek, co do których jest pewność, że dany typ się nie zmieści. 
 Po wyjściu z trzeciej pętli następuje sprawdzenie warunku, czy dany obiekt został umieszczony w którejś z otwartych belk. Jeśli tak się nie stało, tworzona i dodawana do dynamicznej tablicy zostaje nowa belka z wpisanym do niej, obecnie rozważanym do włożenia, elementem.
 
-\section{Programowanie liniowe - MIP}
+\section{Programowanie liniowe}
 \subsection{Generowanie konfiguracji}
 Problemem pośrednim w przypadku implementacji sformułowania liniowego z sekcji \ref{linear_formula} jest sposób generowania możliwych konfiguracji mogących wystąpić na pojedyńczej belce.
 Z racji występowania w formułach znaków nierówności, a nie równości, pozwolono sobie na całkowite wypełnianie dostępnej w belkach przestrzeni, co nie wpływa jednak na finalną liczbę potrzebnych belek, a jedynie na pozostałą przestrzeń w każdej z nich, która zostanie podzielona pod nadmiarowe elementy. W optymalnym rozwiązaniu pozostałaby po prostu niepodzielona.\\
@@ -152,7 +152,7 @@ Analogicznie wygląda to dla kolumn: \\
 \verb|void glp_set_col_bnds(glp prob *P, int j, int type, double lb, double ub)|
 
 \subsection{Typ zmiennych}\label{typ_zmiennych}
-Również w przypadku MIP można dać znać solverowi od których zmiennych wymagamy, aby były całkowite. W naszym przypadku są to wszystkie, a jest ich tyle ile kolumn (konfiguracji).
+Również w przypadku MIP należy dać znać solverowi od których zmiennych wymagamy, aby były całkowite. W naszym przypadku są to wszystkie, a jest ich tyle ile kolumn (konfiguracji).
 Potrzebne jest wywołanie funkcji:
 \verb|void glp_set_col_kind(glp_prob *P, int j, int kind)|
 
@@ -174,34 +174,76 @@ Za ustawienie współczynników $j$-tej zmiennej w funkcji celu odpowiada funkcj
 W tym przypadku wszystkim zmiennym zostają nadane współczynniki równe jeden.
 
 \subsection{Metody rozwiązujące problem}
-Teraz pozostaje, tak opisany w programie, problem rozwiązć. 
-Inicjalizajca obydwu metod (MIP i nawinej) do tego momentu przebiegała tak samo (z tym, że w tej drugiej nie trzeba nakładać ograniczenia calkowitoliczbowego na zmienne). 
+{\parindent0pt
+Plik \verb|Sourcode/src/solver_part.c|
+}
+\subsubsection{Naiwne podejście}
+Pierwszym etapem jest usunięcie ze wzoru \ref{linear_formula} ograniczeń całkowitoliczbowych zmiennych. Wystarczy nie wywoływac metody glp\_set\_col\_kind i pozostawić domyślny typ zmiennych - ciągły. Następnym krokiem jest rozwiązanie powstałego w ten sposób LP (nazywanego relaksacją programowania liniowego) - do tego posłuży algorytm sympleksowy. Poniżej definicja funkcji, która go wywołuje:\\
+\verb|int glp_simplex(glp_prob *P, const glp_smcp *parm)|. \\
+Otrzymane w ten sposób rozwiązanie (zmienne) należy zaokrąglić do najbliższej wartośći całkowitoliczbowej. 
+Oczywiście rozwiązanie otrzymane w ten sposób nie będzie optymalne, co więcej, może być niespełnialne, ponieważ może naruszać nałożone ograniczenia, konkretnie liczbę potrzebnych elementów danego rodzaju, może się okazać, że będzie ich za mało. Aby sobie z tym poradzić można przerzucić uzyskane w ten sposób konfiguracje do wektora (dynamicznej tablicy) belek, policzyć ile elementów danego rodzaju brakuje i z tymi dwiema informacjami wywołać algorytm approksymacyjny FFD, który je dopakuje.
 
 \subsubsection{MIP}
-GLPK do rozwiązywania problemów MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. 
-Metoda ta polega na wstępnej relaksacji ograniczeń całkowitych, znalezieniu rozwiązania pochodnego i takiej jego modyfikacji by spełniała oryginalne sformułowanie (z ograniczeniami całkowitymi).
+Precyzyjnie rozpatrywany jest problem IP, szczególny przypadek MIP, którego wszystkie zmienne decyzyjne są dyskretne.
+Dlatego też dokumentacja GLPK odnosi się tylko do MIP. Samo GLPK do rozwiązywania MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. \\
+Fukcja wywołująca optymalizację MIP: \verb|int glp_intopt(glp_prob *P, const glp_iocp *parm)|. \\
+Gdy w parametrach został wyłączony \textit{presolver}, co jest ustawieniem domyślnym, obiekt problemu (P) powinien zawierać optymalne rozwiązanie relaksacji LP, które można uzyskać rutyną wywołującą solver sympleksowy.
+
+\textbf{DODAWAĆ COŚ O BRANCH AND CUT, BO NIE WIEM CZY WSTAWIANIE TU OPISU MA SENS???})
 
 
-Wywołanie może wyglądać tak:
+Wywołania metod mogą wyglądać podobnie jak niżej:
 \begin{lstlisting}[language=C]
-	// lp - wskaźnik na zmienną typu glp_prob
-	glp_iocp mip_parm;          // zmienna odpowiadająca za parametry MIP
-	glp_init_iocp(&mip_parm);   // inicjuje domyślne parametry
-	mip_parm.presolve = GLP_ON; // włączenie presolvera
-	glp_intopt(lp, &mip_parm);  // wywołanie solvera MIP
+/* Początek wspólnej sekcja dla obydwu podejść */
+// lp - wskaźnik na zmienną typu glp_prob
+glp_smcp simplex_param; // zmienna odpowiadająca za parametry 
+                        // metody sympleksowej
+glp_init_smcp(&simplex_param);  // inicjacja domyślnych parametrów
+glp_simplex(lp, &simplex_param); // wywołanie rutyny, która przeprowadza 
+				// optymalizację algorytmem sympleksowym
+	
+/* Koniec sekcji wspólnej */
+/* w przypadku metody naiwnej pozostaje zaokrąglić wyniki i wywołać FDD */
+
+/* Sekcja odpowiedzialna za MIP */
+for (size_t j = 1; j <= numOfCols; j++)
+{
+	glp_set_col_kind(lp, j, GLP_IV);
+}
+glp_iocp mip_parm;   // zmienna odpowiadająca za parametry MIP
+glp_init_iocp(&mip_parm); // inicjacja domyślnych parametrów
+mip_parm.presolve = GLP_OFF;
+glp_intopt(lp, &mip_parm);
+	
 \end{lstlisting}
 
-W metodzie naiwnej nie trzeba nakładać ograniczeń na typ zmiennych (\ref{typ_zmiennych}). Sam proces jest ma wspó
 
 \subsection{Odzyskanie rozwiązania}
-Funkcja \verb|int glp_mip_status(glp_prob *P)| informuje o stanie rozwiązania MIP znalezionego przez solver MIP. Gdy zwróci GLP\_OPT - rozwiązanie jest optymalne pod względem liczby całkowitej. \\
-Do uzyskania wartości funkcji celu (w tym wypadku liczba potrzenych belek) dla rozwiązania MIP należy wywołać funkcję \\ 
-\verb|double glp_mip_obj_val(glp_prob *P)|. \\
-Funkcja \verb|double glp_mip_col_val(glp_prob *P, int j)| zwraca wartość zmiennej związanej z $j$-tą kolumną. Interesują nas niezerowe wartości, odpowiadające liczbie potrzebnych konfiguracji o indeksie $j$. Zapisane wcześniej konfiguracje można odzyskać, używając funkcji: \\
-\verb|int glp_get_mat_col(glp_prob *P, int j, int ind[], double val[])|, \\
-która zwróci dwie tablice, które mają strukturę analogiczną jak w przypadku umieszczania konfiguracji w instancji problemu (patrz \ref{macierz_ograniczen}). 
+\subsubsection{Metoda sympleksowa}
+{\parindent0pt
+\verb|int glp_get_prim_stat(glp_prob *P)| - informuje o statusie podstawowego rozwiązania dla określonego obiektu problemu, wartość GLP\_FEAS - rozwiązanie jest spełnialne \\
+}
+\verb|double glp_get_obj_val(glp_prob *P)| - uzyskanie wartości funkcji celu (liczby potrzebnych belek)  \\
+\verb|double glp_get_col_prim(glp_prob *P, int j)| - zwraca wartość zmiennej związanej z j-tą kolumną (liczby potrzebnych konfiguracji o indeksie j) - interesują nas wartości większe od zera, które należy zaokraglić
 
-Z takimi danymi poddanymi odpowiedniemu formowatowaniu, można przejść do etapu drukowania rozwiązania. Tekst wyjścia programu dla przytoczonego wyżej przykładu można zobaczyć na obrazie \ref{output_example}.
+\subsubsection{Metoda MIP}
+Funkjce zwracają wartości analogicznie jak powyżej. \\
+\verb|int glp_mip_status(glp_prob *P)| - informuje o statusie rozwiązania dla wywołania metody MIP, wartość GLP\_OPT - rozwiązanie jest optymalne pod względem liczby całkowitej \\
+\verb|double glp_mip_obj_val(glp_prob *P)|\\
+\verb|double glp_mip_col_val(glp_prob *P, int j)| - pomimo typu \textit{double} zwracane wartości są całkowite i nie ma potrzeby ich zaokrąglania, wystarczy je zrzutować np. na \textit{size\_t}
+
+Dla obydwu metod pozyskanie konfiguracji wygląda tak samo: \\
+\verb|int glp_get_mat_col(glp_prob *P, int j, int ind[], double val[])| - zwraca dwie tablice, które mają strukturę analogiczną jak w przypadku umieszczania konfiguracji w instancji problemu (patrz \ref{macierz_ograniczen}). \\
+
+
+Po odpowienim sformatowaniu rozwiązania uzyskanego powyższymi metodami (w przypadku podejścia naiwnego również zaokrągleniu, uzupełnieniu brakujacych elementów algorytmem FFD) można wydrukować je na wyjście (terminal lub plik).
+
+Tekst wyjścia programu dla przytoczonego wyżej przykładu można zobaczyć na obrazie \ref{output_example}. Każda konfuguracja C[$i$] o indeksie $i$ składa się z $d$ (w tym wypadku trzynastu) kolumn, odpowiadających posortowanym rodzajom obiektów po słowie LENGHT i QUANTITY. Wartość każdej z tych kolumn to liczba elementów danego typu występująca w konfiguracji. 
+W przypadku MIP występują dodatkowe, rozpoczynające się znakami: $\%$, x, po których nastepują wartości odpowiedno: pozostałej niewykorzystanej przestrzeni w pojedyńczej belce, liczbie potrzebnych belek z daną konfiguracją.
+Gdy w programie wykonywana była metoda APPROX, każda belka jest rozpisywana osobno, w nowym wierszu. Nie pojawia sie kolumna informująca ile razy dana konfiguracja została użyta.
+Dodatkowo przed konfiguracjami pojawiają się informacje takie jak wybrany algorytm, liczba kolumn (wygenerowanych konfiguracji), rozmiar macierzy, liczba całkowitych zmiennych, status rozwiązania etc. 
+
+\textbf{Pomocną w trakcie testów będzie informacja o ograniczeniu dolnym \\ (LOWER\_STOCK\_NUM\_BOUND) - jest to suma długości wszystkich elementów podzielona przez długość belki i zaokrąglona w górę - nie istnieją poprawne rozwiązania o mniejszej liczbie belek. Stąd, tak jak w tym przypadku, gdy dolna granica jest równa liczbie belek z uzyskanego rozwiązania, możemy mieć pewność, że jest ono optymalne pod tym względem.}
 
 \begin{figure}[h!]
 	\lstinputlisting{example_result.txt}
@@ -209,9 +251,6 @@ Z takimi danymi poddanymi odpowiedniemu formowatowaniu, można przejść do etap
 	\label{output_example}
 \end{figure}
 
-Każda konfuguracja C[$i$] o indeksie $i$ składa się z $d$ (w tym wypadku trzynastu) kolumn, odpowiadających posortowanym rodzajom obiektów po słowie LENGHT i QUANTITY. Wartość każdej z tych kolumn to liczba elementów danego typu występująca w konfiguracji. 
-W przypadku MIP występują dodatkowe, rozpoczynające się znakami: $\%$, x, po których nastepują wartości odpowiedno: pozostałej niewykorzystanej przestrzeni w pojedyńczej belce, liczbie potrzebnych belek z daną konfiguracją.
-Gdy w programie wykonywana była metoda APPROX, każda belka jest rozpisywana osobno, w nowym wierszu. Nie pojawia sie kolumna informująca ile razy dana konfiguracja została użyta. 
 
 
 
