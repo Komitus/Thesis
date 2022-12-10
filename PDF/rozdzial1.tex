@@ -5,13 +5,13 @@ W tym rozdziale scharakteryzowany zostanie Problem Cięcia Belek (ang. Cutting S
 Zarysowane też zostaną podstawy algorytmów używanych do jego rozwiazania.
 
 \section{Problem cięcia belek}
-Jest to problem znalezienia takiego rozkładu elementów na belkach, z których owe elementy będa wycinane, aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$),a liczba rodzajów elementów ($d$) jest ograniczona. Istnieją też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były jak najmniejsze.\\
+Jest to problem znalezienia takiego rozkładu $n$ elementów na belkach, z których owe elementy będą wycinane, aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$), a \textbf{liczba rodzajów elementów ($d$) jest stała} - pomijalna, mniejsza od liczby wszystkich elementów. Istnieją też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były jak najmniejsze.\\
 Jest to problem optymalizacyjny - liczbę żużytych belek można wyrazić za pomocą funkcji celu (całkowitej w przypadku, gdy instancja problemu nie przewiduje możliwości dzielenia elementów), i pragniemy ją zminimalizować.
 Wynik optymalny, w tym wypadku, to taka liczba zużytych w rozwiązaniu belek, że już niemożliwe byłoby wycięcie wszystkich elementów z liczby o jeden mniejszej.
 Z punktu widzenia złożoności obliczeniowej, problem należy do klasy problemów silnie NP-trudnych. W przeszłości konstruowano algorytmy dające wynik optymalny, które działy w czasie mniejszym bądź równym wielomianowemu, ale działo się to dla przypadku małego $d$, bądź dawały wynik optymalny powiększony o funkcję zależną od $d$ tj. np. $OPT + O(log^2(d))$  \cite{ALG_OPT_1}.
 
 \section{Sformułowanie problemu liniowego całkowitoliczbowego \\ (Integer Programing)} \label{linear_formula}
-Przyjmijmy nastepujące oznaczenia: zbiór rodzajów elementów: $\mathcal{T} = \{T_1, T_2, \dots, T_n\}$, każdy rodzaj $T_i$ z przypisaną pozytywną długością całkowitą $p_i \leq \beta$. Zbiór wszystkich elementów: $|\mathcal{\sigma}| = n$, w którym występuje $n_i$ elementów typu $T_i$, tj. $\sum_{T_i \in \mathcal{T}} n_i = n$.
+Przyjmijmy nastepujące oznaczenia: zbiór rodzajów elementów: $\mathcal{T} = \{T_1, T_2, \dots, T_d\}$, każdy rodzaj $T_i$ z przypisaną pozytywną długością całkowitą $p_i \leq \beta$. Zbiór wszystkich elementów: $|\mathcal{\sigma}| = n$, w którym występuje $n_i$ elementów typu $T_i$, tj. $\sum_{T_i \in \mathcal{T}} n_i = n$.
 Konfiguracja $C_i$ jest zbiorem elementów o sumie długości, co najwyżej $\beta$ (długość belki). $C_i$ może mieć postać $d$-wymiarowego wektora $C_i = \langle a(C_i, 1), a(C_i,2), \dots, a(C_i,d)\rangle$, w którym każda $j$-ta pozycja, $a(C_i)$ mówi o liczbie elementów długości $p_j$ w $C_i$. Niech $\mathcal{C}$ będzie zbiorem wszystkich konfiguracji, którego moc wyniesie maksymalnie $n^d$, co oczywiście nie zdarzy sie często, gdyż niektóre elementy są na tyle duże, że kolejne już nie zmieszczą się do tej samej belki.
 Wtedy problem cięcia belek może zostać sformułowany w następujący sposób:
 \begin{align}
@@ -49,7 +49,7 @@ Dla PP istnieje kilka algorytmów aproksymacyjnych, których współczynniki prz
 
 \begin{table}[!h] 
 \begin{center}
-	\begin{tabular}{ |p{3cm}||p{5cm}|p{3cm}|  }
+	\begin{tabular}{ |p{3cm}|p{5cm}|p{3cm}|  }
 		\hline
 		Skrót & Nazwa angielska & Współczynnik aproksymacji\\
 		\hline

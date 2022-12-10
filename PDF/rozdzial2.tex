@@ -12,32 +12,12 @@ Przedmiotem tego rozdziału będzie opis implementacji trzech podprogramów real
 	 
 \end{enumerate}
 
-Wszystkie trzy zostały zaimplementowane w języku \textbf{C}, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego \textbf{solver GLPK} zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
-Zrealizowano je w postaci programu konsolowego, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0. 
+Wszystkie trzy zostały zaimplementowane w języku \textbf{C}, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego \textbf{solvera GLPK} zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
+Zrealizowny program posiada interfejs tekstowy, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0. 
 Procesem kompilacji zarządza narzędzie \textbf{Makefile}.
-Struktura projektu zawartego na dołączonej płycie CD prezentuje się następująco:
 
-\dirtree{%
-	.1 SourceCode.
-	.2 Makefile.
-	.2 bin.
-	.3 main.
-	.2 obj.
-	.2 src.
-	.3 approx.c.
-	.3 approx.h.
-	.3 gen\_configs.c.
-	.3 io\_handler.c.
-	.3 io\_handler.h.
-	.3 main.c.
-	.3 solver\_part.c.
-	.3 solver\_part.h.
-	.3 structs.h.
-	.3 vector.c.
-	.3 vector.h.	
-}
 
-Program analizuje argumenty wiersza poleceń w stylu UNIX/Posix (funkcja getopt), stad systemy z nim zgodne powinny być obierane jako platforma docelowa kompilacji. Niezbędna też jest obecność plików nagłówkowych, statyczny, współdzielonych bibliotek solvera GLPK. Instrukcję jak zainstalować niezbędny pakiet moża znaleźć pod tym linkiem: \href{https://en.wikibooks.org/wiki/GLPK/Linux_OS}{instrukcja instalacji GLPK}.
+Program analizuje argumenty wiersza poleceń w stylu UNIX/Posix (funkcja getopt), stad systemy z nim zgodne powinny być obierane jako platforma docelowa kompilacji. Niezbędna też jest obecność plików nagłówkowych, statyczny, współdzielonych bibliotek solvera GLPK. Instrukcję jak zainstalować niezbędny pakiet moża znaleźć pod tym adresem: \\ \href{https://en.wikibooks.org/wiki/GLPK/Linux_OS}{instrukcja instalacji GLPK (https://en.wikibooks.org/wiki/GLPK/Linux\_OS)}.
 
 \newpage
 Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą h: ``\verb|SourceCode/bin/main -h|``, wtedy zostanie wyświetlony następujacy komunikat:
@@ -55,7 +35,7 @@ Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą 
 
 
 \section{Dane wejściowe} \label{format_danych}
-Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
+Pierwszy punkt z przepływu danych w programie, czyli czytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
 
 
 \begin{table}[!h]
@@ -71,11 +51,11 @@ Pierwszy punkt z przepływu danych w programie, czyli zczytanie wejścia można 
 		\caption{Format danych wejściowych. Każdy wiersz to nowa linia, ``\texttt{\char32}`` oznacza białe znaki }
 	\end{center}
 \end{table}
-Dane wejściowe są zapisywane do struktury \textit{ProblemInstance}, która zawiera w sobie tablicę sturktur typu \textit{ObjWithQuantity}(jej polami przechowują $p_i$, $n_i$). Ta druga sortowana jest według długości obiektów w kolejnośći nierosnącej algorytmem quicksort.
+Dane wejściowe są zapisywane do struktury \textit{ProblemInstance}, która zawiera w sobie tablicę obiektów typu \textit{ObjWithQuantity}(każdy z nich przechowuje $p_i$, $n_i$ dla każdego typu $T_i$). Ta druga sortowana jest według długości obiektów w kolejnośći nierosnącej algorytmem quicksort.
 Każde ułożenie elementów na pojedyńczej belce jest reprezentowane przez stukturę typu \textit{StockConfig}. Zawiera ona tablicę, która informuje ile elementów danej długości, zaczynając od najdluższych przy zerowym indeksie, zostało upakowanych do belki. Druga zmienna w tej strukturze odpowiada pozostałej w belce przestrzeni po odjęciu długości zajmowanej przez konfigurację.
 
 \subsection{Przykład}\label{example}
-Za przykład posluży tutaj dobrze znany w literaturze zestaw danych o długości belki 5600 z trzynastoma rodzajami elementów \cite{EXAMPLE_REF}.
+Za przykład posłuży tutaj dobrze znany w literaturze zestaw danych o długości belki 5600 z trzynastoma rodzajami elementów \cite{EXAMPLE_REF}.
 
 \begin{lstlisting} 
 5600
@@ -107,7 +87,7 @@ Po wyjściu z trzeciej pętli następuje sprawdzenie warunku, czy dany obiekt zo
 \section{Programowanie liniowe}
 \subsection{Generowanie konfiguracji}
 Problemem pośrednim w przypadku implementacji sformułowania liniowego z sekcji \ref{linear_formula} jest sposób generowania możliwych konfiguracji mogących wystąpić na pojedyńczej belce.
-Z racji występowania w formułach znaków nierówności, a nie równości, pozwolono sobie na całkowite wypełnianie dostępnej w belkach przestrzeni, co nie wpływa jednak na finalną liczbę potrzebnych belek, a jedynie na pozostałą przestrzeń w każdej z nich, która zostanie podzielona pod nadmiarowe elementy. W optymalnym rozwiązaniu pozostałaby po prostu niepodzielona.\\
+Z racji występowania w formułach znaków nierówności, a nie równości, pozwolono sobie na całkowite wypełnianie dostępnej w belkach przestrzeni, co nie wpływa jednak na finalną liczbę potrzebnych belek, a jedynie na pozostałą przestrzeń w każdej z nich, która zostanie podzielona na nadmiarowe elementy. W optymalnym rozwiązaniu pozostałaby po prostu niepodzielona.\\
 Kod znajduje się w pliku: \verb|SourceCode/src/gen_config.c|,  \\ zdefiniowany w funkcji: \\ \verb|static inline int gen_configs_tree(ProblemInstance *input, glp_prob *lp);| \\
 Z powodu prostoty i efektywności zaimplementowany został algorytm generujacy konfiguracje leksykograficznie. Patrząc na jego schemat abstrakcyjnie, generuje on $d + 1$ - poziomowe drzewo, ktorego węzły reprezentują pozostałą przestrzeń, krawędzie ile elementów danego typu (poziomu), zaczynając od najdłuższego, mieści się w konfiguracji, która jest czytana jako wartości wezłów na ścieżce od korzenia (długośc belki) do liścia (pozostała finalnie przestrzeń).
 Szczegółowy opis tej metody można przeczytać w pracy Saad M.A. Sulimana \textit{Pattern generating procedure for the cutting stock problem} \cite{GEN_CONFIGS}. \\
@@ -181,15 +161,17 @@ Plik \verb|Sourcode/src/solver_part.c|
 Pierwszym etapem jest usunięcie ze wzoru \ref{linear_formula} ograniczeń całkowitoliczbowych zmiennych. Wystarczy nie wywoływac metody glp\_set\_col\_kind i pozostawić domyślny typ zmiennych - ciągły. Następnym krokiem jest rozwiązanie powstałego w ten sposób LP (nazywanego relaksacją programowania liniowego) - do tego posłuży algorytm sympleksowy. Poniżej definicja funkcji, która go wywołuje:\\
 \verb|int glp_simplex(glp_prob *P, const glp_smcp *parm)|. \\
 Otrzymane w ten sposób rozwiązanie (zmienne) należy zaokrąglić do najbliższej wartośći całkowitoliczbowej. 
-Oczywiście rozwiązanie otrzymane w ten sposób nie będzie optymalne, co więcej, może być niespełnialne, ponieważ może naruszać nałożone ograniczenia, konkretnie liczbę potrzebnych elementów danego rodzaju, może się okazać, że będzie ich za mało. Aby sobie z tym poradzić można przerzucić uzyskane w ten sposób konfiguracje do wektora (dynamicznej tablicy) belek, policzyć ile elementów danego rodzaju brakuje i z tymi dwiema informacjami wywołać algorytm approksymacyjny FFD, który je dopakuje.
+Oczywiście rozwiązanie otrzymane w ten sposób nie będzie optymalne, co więcej, może być niespełnialne, ponieważ może naruszać nałożone ograniczenia, konkretnie liczbę potrzebnych elementów danego rodzaju, może się okazać, że będzie ich za mało.
+
+Nie da się tu skorzystać z własności zachowania całkowitości podstawowych rozwiązań cechującej problemy postaci $max \mathbf{c^Tx}$ takich że $A\mathbf{x = b}$, gdzie $A$ i $\mathbf{b}$ mają wszystkie wpisy całkowite, a macierz $A$ jest całkowicie unimodularna.
+
+Aby sobie z tym poradzić można przerzucić uzyskane w ten sposób konfiguracje do wektora (dynamicznej tablicy) belek, policzyć ile elementów danego rodzaju brakuje i z tymi dwiema informacjami wywołać algorytm approksymacyjny FFD, który je dopakuje.
 
 \subsubsection{MIP}
 Precyzyjnie rozpatrywany jest problem IP, szczególny przypadek MIP, którego wszystkie zmienne decyzyjne są dyskretne.
 Dlatego też dokumentacja GLPK odnosi się tylko do MIP. Samo GLPK do rozwiązywania MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. \\
 Fukcja wywołująca optymalizację MIP: \verb|int glp_intopt(glp_prob *P, const glp_iocp *parm)|. \\
 Gdy w parametrach został wyłączony \textit{presolver}, co jest ustawieniem domyślnym, obiekt problemu (P) powinien zawierać optymalne rozwiązanie relaksacji LP, które można uzyskać rutyną wywołującą solver sympleksowy.
-
-\textbf{DODAWAĆ COŚ O BRANCH AND CUT, BO NIE WIEM CZY WSTAWIANIE TU OPISU MA SENS???})
 
 
 Wywołania metod mogą wyglądać podobnie jak niżej:
@@ -238,12 +220,33 @@ Dla obydwu metod pozyskanie konfiguracji wygląda tak samo: \\
 
 Po odpowienim sformatowaniu rozwiązania uzyskanego powyższymi metodami (w przypadku podejścia naiwnego również zaokrągleniu, uzupełnieniu brakujacych elementów algorytmem FFD) można wydrukować je na wyjście (terminal lub plik).
 
-Tekst wyjścia programu dla przytoczonego wyżej przykładu można zobaczyć na obrazie \ref{output_example}. Każda konfuguracja C[$i$] o indeksie $i$ składa się z $d$ (w tym wypadku trzynastu) kolumn, odpowiadających posortowanym rodzajom obiektów po słowie LENGHT i QUANTITY. Wartość każdej z tych kolumn to liczba elementów danego typu występująca w konfiguracji. 
-W przypadku MIP występują dodatkowe, rozpoczynające się znakami: $\%$, x, po których nastepują wartości odpowiedno: pozostałej niewykorzystanej przestrzeni w pojedyńczej belce, liczbie potrzebnych belek z daną konfiguracją.
-Gdy w programie wykonywana była metoda APPROX, każda belka jest rozpisywana osobno, w nowym wierszu. Nie pojawia sie kolumna informująca ile razy dana konfiguracja została użyta.
-Dodatkowo przed konfiguracjami pojawiają się informacje takie jak wybrany algorytm, liczba kolumn (wygenerowanych konfiguracji), rozmiar macierzy, liczba całkowitych zmiennych, status rozwiązania etc. 
+Tekst wyjścia programu dla przytoczonego wyżej przykładu można zobaczyć na rysunku \ref{output_example}. 
+Wiersze zawierają informację kolejno o: 
+\begin{itemize}
+	\item długości belki
+	\item liczbie typów
+	\item liczbie wszyskich obiektów
+	\item ograniczeniu dolnym
+	\item posortowanej w kolejności nierosnącej długości typów obiektów
+	\item liczbie potrzebnych elementów danej długości (w przykładzie potrzeba 20 elementów długosći 2200)
+	\item wybranym algorytmie
+	\item[*] liczbie wygenerowanych konfiguracji
+	\item[*] rozmiarze macierzy ograniczeń
+	\item[*] liczbie zmiennych całkowitych w problemie liniowym
+	\item[*] statusie rozwiązania
+	\item liczbie potrzebnych belek
+	\item poszczególnych konfiguracjach potrzebnych w rozwiązaniu, wylistowanych w osobnych wierszach, z których każdy składa się z kolmumn:
+	\begin{itemize}
+		\item  pierwsza, postaci: C[$i$], gdzie $i$ to numer konfiguracji (w przypadku MIP są to rzeczywiste indeksy wpisanych kolumn do macierzy ograniczeń)
+		\item nąstępne $d$ (w podanym przykładzie trzynastu) kolumn oddzielonych znakami ``$|$``, odpowiadają posortowanym rodzajom obiektów, wartość każdej z nich to liczba elementów danego typu występująca w konfiguracji
+		\item kolumna rozpoczynająca się po znakach: ``$\%$`` - niewykorzystana przestrzeń w pojedyńczej belce
+		\item (w przypadku MIP) dodatkowa kolumna, rozpoczynająca się po znakach: $|x$ - liczba potrzebnych belek z daną konfiguracją
+	\end{itemize}
+\end{itemize}
+* Punkty oznaczone gwiazdką dotyczą metod MIP i SM.
 
-\textbf{Pomocną w trakcie testów będzie informacja o ograniczeniu dolnym \\ (LOWER\_STOCK\_NUM\_BOUND) - jest to suma długości wszystkich elementów podzielona przez długość belki i zaokrąglona w górę - nie istnieją poprawne rozwiązania o mniejszej liczbie belek. Stąd, tak jak w tym przypadku, gdy dolna granica jest równa liczbie belek z uzyskanego rozwiązania, możemy mieć pewność, że jest ono optymalne pod tym względem.}
+\section{Ograniczenie dolne}
+Pomocną w trakcie testów będzie informacja o ograniczeniu dolnym \\ (LOWER\_STOCK\_NUM\_BOUND) - jest to suma długości wszystkich elementów podzielona przez długość belki i zaokrąglona w górę - nie istnieją poprawne rozwiązania o mniejszej liczbie belek. Stąd, tak jak w tym przypadku, gdy dolna granica jest równa liczbie belek z uzyskanego rozwiązania, możemy mieć pewność, że jest ono optymalne pod tym względem.
 
 \begin{figure}[h!]
 	\lstinputlisting{example_result.txt}

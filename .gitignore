@@ -4,6 +4,11 @@ main
 ## Python
 __pycache__
 
+## Tests
+Tests/input/*
+Tests/output/*
+Tests/solver_logs/*
+
 # VS Code
 SourceCode/.vscode/*
 ## Core latex/pdflatex auxiliary files:

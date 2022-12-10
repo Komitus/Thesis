@@ -14,7 +14,7 @@ if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir $OUTPUT_DIR
 fi
 
-EXEC_FILE="$(cd ../ && echo $PWD)/bin/main"
+EXEC_FILE="$(cd ../ && echo $PWD)/SourceCode/bin/main"
 
 if [ ! -f $EXEC_FILE ]; then
     echo "EXEC FILE DOESN'T EXISTS: $EXEC_FILE"
