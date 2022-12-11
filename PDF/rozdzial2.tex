@@ -1,4 +1,4 @@
-\chapter{Implementacja}
+\chapter{Implementacja}  \label{ch:CHAPTER_2}
 \thispagestyle{chapterBeginStyle}
 
 Przedmiotem tego rozdziału będzie opis implementacji trzech podprogramów realizujących: 
@@ -19,7 +19,6 @@ Procesem kompilacji zarządza narzędzie \textbf{Makefile}.
 
 Program analizuje argumenty wiersza poleceń w stylu UNIX/Posix (funkcja getopt), stad systemy z nim zgodne powinny być obierane jako platforma docelowa kompilacji. Niezbędna też jest obecność plików nagłówkowych, statyczny, współdzielonych bibliotek solvera GLPK. Instrukcję jak zainstalować niezbędny pakiet moża znaleźć pod tym adresem: \\ \href{https://en.wikibooks.org/wiki/GLPK/Linux_OS}{instrukcja instalacji GLPK (https://en.wikibooks.org/wiki/GLPK/Linux\_OS)}.
 
-\newpage
 Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą h: ``\verb|SourceCode/bin/main -h|``, wtedy zostanie wyświetlony następujacy komunikat:
 
 \begin{lstlisting}

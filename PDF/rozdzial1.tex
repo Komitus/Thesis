@@ -1,4 +1,4 @@
-\chapter{Analiza problemu}
+\chapter{Analiza problemu} \label{ch:CHAPTER_1}
 \thispagestyle{chapterBeginStyle}
 
 W tym rozdziale scharakteryzowany zostanie Problem Cięcia Belek (ang. Cutting Stock Problem), rozważany przez autora, w dalszej części oznaczony jako PCB.
@@ -22,7 +22,7 @@ Wtedy problem cięcia belek może zostać sformułowany w następujący sposób:
 
 W tym sformułowaniu $n_j$ oznacza liczbę wszystkich elementów długości $p_j$. Zmienna $x_{C_i}$ mówi o liczbie belek przechowujących obiekty zgodnie z konfiguracją $C_i$, natomiast $m$ o liczbie zużytych belek.
 
-\section{Bin Packing}
+\section{Problem Pakowania}
 Analogicznym problemem do PCB jest Problem Pakowania (ang. Bin Packing) dalej wspominany jako PP.
 Może być rozpatrywany w kontekście optymalizacji. W tym przypadku, elementy różnych rozmiarów musza być upakowane w \textbf{skończoną} (tutaj różnica w stosunku do PCB) liczbę koszy, każdy zadanej, stałej długości, w taki sposób który zminimalizuje ich zużytą liczbę. Patrząc na niego w kategorii problemu decyzyjnego, pytaniem jest czy zadane elementy zmieszczą się w podaną na wejściu problemu liczbę koszy.
 W przypadku zdefiniowania PP w programowaniu liniowym całkowitoliczbowym, w przeciwieństwie do PCB, zmienne całkowitoliczbowego nie reprezentują ile razy dana konfiguracja została uzyta, ale czy dany kosz został użyty oraz czy element o indeksie odpowiadającemu zmiennej został włożony do kosza o odpowadajacym indeksie.

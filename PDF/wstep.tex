@@ -1,9 +1,26 @@
 %Korekta ALD - nienumerowany wstęp
 %\chapter{Wstęp}
 \addcontentsline{toc}{chapter}{Wstęp}
-\chapter*{Wstęp}
+\chapter{Wstęp}
 
 \thispagestyle{chapterBeginStyle}
+Niniejsza praca miała na celu zbadanie problemu na który natknął się autor w życiu prywatnym. Chciał on dowiedzieć się jakie metody stosuje się, aby zminimalizować straty materiału w przedsiębiorstwie zajmującym się wycinaniem różnej długości metalowych elementów z belek o zadanej stałej długości. Głównym kryterium była minimalizacja liczby zużywanych belek. W literaturze problem ten występuje on pod nazwą \textit{Problem Cięcia Belek}, jest to szczególna odmiana \textit{Problemu Pakowania}. Jest on problemem NP-trudnym, więc ciężko jest w tym wypadku o dokładny algorytm zwracający rozwiązanie o najniższym (optymalnym) koszcie, który działałby w rozsądnym czasie. Z tego powodu uwagę autora przykuł algorytm, którego złożoność jest wielomianowa, a zwraca przy tym rozwiązanie o jeden większe od kosztu optymalnego. Stąd tytuł niniejszej jak pracy ja i z tej który pochodzi opis algorytmu: \textit{A Polynomial Time OPT + 1 Algorithm for the Cutting Stock Problem with a Constant Number of Object Lengths} \cite{ALG_OPT_1}. Ważnym założeniem tu jest druga część oryginalnego tytułu \textit{stała liczba długości} - na wejściu do programu oczekujemy, że liczba różnych długości jest mniejsza od liczby wszystkich wymaganych do wycięcia elementów. Jednakże powyższy algorytm wykorzystuje metody, które z powodu ich złożoności nie zostały zaimplementowane w żadnej powszechnie dostępnej bibliotece. 
+Dlatego celem niniejszej pracy jest odpowiedzenie na pytanie czy obecnie znane, prostsze podejścia nie są w stanie zwracać zadowalajacych wyników dla mniej skomplikowanych danych wejściowych z którymi można spotkać się w życiu codziennym. Zwrócono również uwage na problemy naprzeciw którym wychodzi \textit{algorytm OPT+1} jak i na te, których nie rozwiązuje.
+
+
+\section*{Struktura pracy}
+Praca została podzielona na pięć rozdziałów. 
+
+Pierwszym rozdziałem jest niniejszy wstęp. Wprowadził on w temat i opisał cel, który kierował autorem.
+
+Rozdział \ref{ch:CHAPTER_1} stanowi teoretyczny wstęp do omawianego problemu. Przedstawia jego istotę i istnejące metody do rozwiązywania go: algorytmy aproksymacyjne i programowanie liniowe (całkowitoliczbowe).
+
+Rozdział \ref{ch:CHAPTER_2} dotyczy implementacji w języku C, przy użyciu solvera GLPK, przedstawionych we wcześniejszym rozdziale metod.
+
+Rozdział \ref{ch:CHAPTER_3} zawiera zebrane wyniki, obserwacje i wnioski płynące z przeprowadzonych, opisanych testów. 
+
+Końcowe wnioski i ogólne podsumowanie pracy znajdują się w ostatnim rozdziale nr \ref{ch:SUMMARY}.
+
 
 
 
