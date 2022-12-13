@@ -1,261 +1,107 @@
-\chapter{Implementacja}  \label{ch:CHAPTER_2}
+\chapter{Analiza problemu} 
 \thispagestyle{chapterBeginStyle}
+\label{ch:CHAPTER_2}
 
-Przedmiotem tego rozdziału będzie opis implementacji trzech podprogramów realizujących: 
-\begin{enumerate}
-	\item aproksymacyjny algorytm First Fit Decreasing 
-	\item sformułowanie liniowe z sekcji \ref{linear_formula} - dwie metody:
-	\begin{enumerate}
-		\item naiwna - releksacja IP do odpowiadającego LP (Linear Programming) i zaokrąglenie rozwiązania (algorytm simpleks i FFD)
-		\item MIP - algorytm branch and cut
-	\end{enumerate}
-	 
-\end{enumerate}
+W tym rozdziale scharakteryzowany zostanie Problem Cięcia Belek (ang. Cutting Stock Problem), rozważany przez autora, w dalszej części oznaczony jako PCB.
+Zarysowane też zostaną podstawy algorytmów używanych do jego rozwiazania.
 
-Wszystkie trzy zostały zaimplementowane w języku \textbf{C}, w standardzie C17. Motywem tego wyboru były prędkość wykonywania skompilowanego programu, jak i fakt, że API wybranego \textbf{solvera GLPK} zostało napisane w C, co pozwala na bezpośrednie jego wywołania z poziomu tego języka\cite{GLPK_API}.
-Zrealizowny program posiada interfejs tekstowy, który dla odpowiednich flag wywołuje odpowiadające funkcje. Użyto GLPK (GNU Linear Programming Kit) w wersji 5.0. 
-Procesem kompilacji zarządza narzędzie \textbf{Makefile}.
+\section{Problem cięcia belek}
+Jest to problem znalezienia takiego rozkładu $n$ elementów na belkach, z których owe elementy będą wycinane, aby zminimalizować straty materiału.  W niniejszej pracy autor skupia się na problemie jednowymiarowym, minmalizowana jest liczba belek, z których są wycinane elementy i są one tej samej długości ($\beta$), a \textbf{liczba rodzajów elementów ($d$) jest stała} - pomijalna, mniejsza od liczby wszystkich elementów. Istnieją też inne jego warianty. Można rozpatrywać problem dwu, trzy - wymiarowy, przyjąć różne długości belek, jak również skupić sie na tym, aby resztki na pojedyńczych belkach były jak najmniejsze.\\
+Jest to problem optymalizacyjny - liczbę żużytych belek można wyrazić za pomocą funkcji celu (całkowitej w przypadku, gdy instancja problemu nie przewiduje możliwości dzielenia elementów), i pragniemy ją zminimalizować.
+Wynik optymalny, w tym wypadku, to taka liczba zużytych w rozwiązaniu belek, że już niemożliwe byłoby wycięcie wszystkich elementów z liczby o jeden mniejszej.
+Z punktu widzenia złożoności obliczeniowej, problem należy do klasy problemów silnie NP-trudnych. W przeszłości konstruowano algorytmy dające wynik optymalny, które działy w czasie mniejszym bądź równym wielomianowemu, ale działo się to dla przypadku małego $d$, bądź dawały wynik optymalny powiększony o funkcję zależną od $d$ tj. np. $OPT + O(log^2(d))$  \cite{ALG_OPT_1}.
 
+\section{Sformułowanie problemu liniowego całkowitoliczbowego \\ (Integer Programing)} \label{linear_formula}
+Przyjmijmy nastepujące oznaczenia: zbiór rodzajów elementów: $\mathcal{T} = \{T_1, T_2, \dots, T_d\}$, każdy rodzaj $T_i$ z przypisaną pozytywną długością całkowitą $p_i \leq \beta$. Zbiór wszystkich elementów: $|\mathcal{\sigma}| = n$, w którym występuje $n_i$ elementów typu $T_i$, tj. $\sum_{T_i \in \mathcal{T}} n_i = n$.
+Konfiguracja $C_i$ jest zbiorem elementów o sumie długości, co najwyżej $\beta$ (długość belki). $C_i$ może mieć postać $d$-wymiarowego wektora $C_i = \langle a(C_i, 1), a(C_i,2), \dots, a(C_i,d)\rangle$, w którym każda $j$-ta pozycja, $a(C_i)$ mówi o liczbie elementów długości $p_j$ w $C_i$. Niech $\mathcal{C}$ będzie zbiorem wszystkich konfiguracji, którego moc wyniesie maksymalnie $n^d$, co oczywiście nie zdarzy sie często, gdyż niektóre elementy są na tyle duże, że kolejne już nie zmieszczą się do tej samej belki.
+Wtedy problem cięcia belek może zostać sformułowany w następujący sposób:
+\begin{align}
+	\text{IP: } \ min \ m =&\sum_{C_i \in \mathcal{C}} x_{C_i}, \\
+	\text{tak, że} &\sum_{C_i \in \mathcal{C}} a(C_i,j)x_{C_i} \geq n_j, dla \ j = 1, \dots, d \\
+	x_{C_i} &\in \mathbb{Z}_{\geq 0}, \text{dla każdego} \ C_i \in \mathcal{C} 
+\end{align}
 
-Program analizuje argumenty wiersza poleceń w stylu UNIX/Posix (funkcja getopt), stad systemy z nim zgodne powinny być obierane jako platforma docelowa kompilacji. Niezbędna też jest obecność plików nagłówkowych, statyczny, współdzielonych bibliotek solvera GLPK. Instrukcję jak zainstalować niezbędny pakiet moża znaleźć pod tym adresem: \\ \href{https://en.wikibooks.org/wiki/GLPK/Linux_OS}{instrukcja instalacji GLPK (https://en.wikibooks.org/wiki/GLPK/Linux\_OS)}.
+W tym sformułowaniu $n_j$ oznacza liczbę wszystkich elementów długości $p_j$. Zmienna $x_{C_i}$ mówi o liczbie belek przechowujących obiekty zgodnie z konfiguracją $C_i$, natomiast $m$ o liczbie zużytych belek.
 
-Dostępne argumenty wywołania wyświetlą się po wywołaniu programu z flagą h: ``\verb|SourceCode/bin/main -h|``, wtedy zostanie wyświetlony następujacy komunikat:
+\section{Problem Pakowania}
+Analogicznym problemem do PCB jest Problem Pakowania (ang. Bin Packing) dalej wspominany jako PP.
+Może być rozpatrywany w kontekście optymalizacji. W tym przypadku, elementy różnych rozmiarów musza być upakowane w \textbf{skończoną} (tutaj różnica w stosunku do PCB) liczbę koszy, każdy zadanej, stałej długości, w taki sposób który zminimalizuje ich zużytą liczbę. Patrząc na niego w kategorii problemu decyzyjnego, pytaniem jest czy zadane elementy zmieszczą się w podaną na wejściu problemu liczbę koszy.
+W przypadku zdefiniowania PP w programowaniu liniowym całkowitoliczbowym, w przeciwieństwie do PCB, zmienne całkowitoliczbowego nie reprezentują ile razy dana konfiguracja została uzyta, ale czy dany kosz został użyty oraz czy element o indeksie odpowiadającemu zmiennej został włożony do kosza o odpowadajacym indeksie.
 
-\begin{lstlisting}
-	Avail flags:
-	-f <in_filename.txt>
-	-o <out_filename.txt>
-	-a <ALGO>
-		AVAIL ALGOS: 
-		* APPROX 
-		* MIP 
-		* SM 
-\end{lstlisting}
+\textbf{Dane wejściowe}: Skończony zbiór elementów $I$, rozmiar $s(i) \in \mathbb{Z}$ dla każdego elementu $i \in I$, pojemność kosza $B \in \mathbb{Z^+}$, $K \in \mathbb{Z^+}$.
 
-
-\section{Dane wejściowe} \label{format_danych}
-Pierwszy punkt z przepływu danych w programie, czyli czytanie wejścia można zrealizować na dwa sposoby. Pierwszy to ręczne wpisywanie z klawiatury w konsoli danych o które wnoszą komunikaty. Drugi to przygotowanie wcześniej pliku w odpowiednim formacie i podanie jego ścieżki jako argument do programu po fladze \textbf{-f}. Tak prezentuje się format danych dal obydwu przypadków: \\
-
-
-\begin{table}[!h]
-	\begin{center}
-		\begin{tabular}{ p{5cm}p{2cm}p{7cm} }
-			\multicolumn{3}{l}{$\beta$ (długość belki)} \\
-			\multicolumn{3}{l}{$d$ (liczba różnych długości - rodzajów elementów)} \\
-			$p_1$ (długość elementu 1) &  \texttt{\char32} & $n_1$ (potrzebna liczba sztuk elementu 1)\\
-			$p_2$ &  \texttt{\char32}  & $n_2$ \\
-			\vdots & \vdots & \vdots \\
-			$p_d$ &  \texttt{\char32} & $n_d$ \\
-		\end{tabular}
-		\caption{Format danych wejściowych. Każdy wiersz to nowa linia, ``\texttt{\char32}`` oznacza białe znaki }
-	\end{center}
-\end{table}
-Dane wejściowe są zapisywane do struktury \textit{ProblemInstance}, która zawiera w sobie tablicę obiektów typu \textit{ObjWithQuantity}(każdy z nich przechowuje $p_i$, $n_i$ dla każdego typu $T_i$). Ta druga sortowana jest według długości obiektów w kolejnośći nierosnącej algorytmem quicksort.
-Każde ułożenie elementów na pojedyńczej belce jest reprezentowane przez stukturę typu \textit{StockConfig}. Zawiera ona tablicę, która informuje ile elementów danej długości, zaczynając od najdluższych przy zerowym indeksie, zostało upakowanych do belki. Druga zmienna w tej strukturze odpowiada pozostałej w belce przestrzeni po odjęciu długości zajmowanej przez konfigurację.
-
-\subsection{Przykład}\label{example}
-Za przykład posłuży tutaj dobrze znany w literaturze zestaw danych o długości belki 5600 z trzynastoma rodzajami elementów \cite{EXAMPLE_REF}.
-
-\begin{lstlisting} 
-5600
-13
-1380 22
-1520 25
-1560 12
-1710 14
-1820 18
-1880 18
-1930 20
-2000 10
-2050 12
-2100 14
-2140 16
-2150 18
-2200 20 
-\end{lstlisting}
+\begin{align*}
+	min \; K = &\sum_{j=1}^{n} y_{j}, \; K \geq 1 \\
+	&\sum_{i \in I}^{n} s(i)x_{ij} \leq By_j, &\forall j \in \{1, \dots, n\} \\
+    &\sum_{j=1}^{n} x_{ij} = 1, \; &\forall i \in I \\
+	&y_j \in \{0,1\}, \; & \forall j \in \{1, \dots, n\} \\
+	&x_{ij} \in \{0,1\}, \; & \forall i \in I \forall j \in \{1, \dots, n\} \\
+\end{align*}
+gdzie $y_i = 1$ jeżeli kosz $j$ jest użyty,  $x_{ij} = 1$ jeżeli element $i$ jest włożony do kosza $j$.
+	
+Można też na problem popatrzeć poprzez pryzmat liczb wymiernych:
+$B = 1 \land \forall i \in I: s(i) \in \mathbb{Q} \cap \left(0, 1\right]$. Istnieją też jego odmiany, gdzie w danych wejściowych pojemnosć kosza $B$ nie jest stała, a zamiast niej jest zadany zbiór zawierający pojemności koszy, które mogą być różne.
 
 \section{Algorytm aproksymacyjny}
-Główna funkcjonalność ma miejsce w funkcji zdefiniowanej nastepująco: \\ \verb|size_t approx(ProblemInstance *input, Vector *v)| w pliku \textbf{SourceCode/src/approx.c}. \\
-Jest to implementacja pseudokodu z sekcji \ref{approx_pseudocode}.
-Składają się na nią głównie trzy zagnieżdżone w sobie pętle iteracyjne.
-Pierwsza iteruje po rodzajach obiektów ($d$ razy).
-Następna wewętrzna iteruje tyle razy ile wynosi liczba potrzebnych elementu danego typu ($n_i$).
-Ostatnia, najgłębiej zagnieżdżona, przechodzi po dynamicznie zaalokowanej tablicy (zmienna typu \textit{Vector}) \textit{otwartych} belek, zaczynąjąc od tego do którego ostatniego mieścił się element danego typu. Pozwala to uniknąć niepotrzbnego sprawdzania belek, co do których jest pewność, że dany typ się nie zmieści. 
-Po wyjściu z trzeciej pętli następuje sprawdzenie warunku, czy dany obiekt został umieszczony w którejś z otwartych belk. Jeśli tak się nie stało, tworzona i dodawana do dynamicznej tablicy zostaje nowa belka z wpisanym do niej, obecnie rozważanym do włożenia, elementem.
+Jednym ze posobów na poradzenie sobie z brakiem algorytmów wielomianowych dla problemów NP-trudnych, obok stosowania algorytmów z wykładniczym czasem działania dla małych danych wejściowych lub izolowania specjalnych przypadków dla których znamy algorytmy wielomianowe, jest próba znalezenia takich algorytmów, które, w czasie wielomianowym, dzadzą rozwiązania bliskie optymalnego. Często takie rozwiązanie powinno dawać satysfakcjonujące wyniki. Algorytm, który zwraca rozwiązania bliskie optymalnego, nazywamy \textbf{\textit{algorytmem aproksymacyjnym}}. \\
+Do określenia dokładności wyników takich algorytmów w rozwiązywaniu problemów optymalizacyjnych, używa się pojęcia współczynnika aproksymacji. Mówimy, że algorytm ma współczynnik aproksymacji $\rho(n)$, gdy dla każdych danych wejściowych rozmiaru $n$, koszt $C$ rozwiązania uzyskanego przez algorytm mieści się we współczynniku $\rho(n)$ kosztu $C^*$ optymalnego rozwiązania. Tak dla problemu minimalizacji zależność wygląda następująco: $0< C^* \leq C$. $C/C^*$ jest współczynnikiem razy ile koszt rozwiązania przybliżonego jest większy od kosztu rozwiązania optymalnego. Analogicznie się to ma do przypadku problemu maksymalizacji: $0< C \leq C^*$. Wspólczynnik to: $C^*/C$  \cite[Rozdział~35]{Cormen_algos}.
+\newpage
+Dla PP istnieje kilka algorytmów aproksymacyjnych, których współczynniki przedstawiono w Tablicy \ref{APPROX_RATIOS}.
 
-\section{Programowanie liniowe}
-\subsection{Generowanie konfiguracji}
-Problemem pośrednim w przypadku implementacji sformułowania liniowego z sekcji \ref{linear_formula} jest sposób generowania możliwych konfiguracji mogących wystąpić na pojedyńczej belce.
-Z racji występowania w formułach znaków nierówności, a nie równości, pozwolono sobie na całkowite wypełnianie dostępnej w belkach przestrzeni, co nie wpływa jednak na finalną liczbę potrzebnych belek, a jedynie na pozostałą przestrzeń w każdej z nich, która zostanie podzielona na nadmiarowe elementy. W optymalnym rozwiązaniu pozostałaby po prostu niepodzielona.\\
-Kod znajduje się w pliku: \verb|SourceCode/src/gen_config.c|,  \\ zdefiniowany w funkcji: \\ \verb|static inline int gen_configs_tree(ProblemInstance *input, glp_prob *lp);| \\
-Z powodu prostoty i efektywności zaimplementowany został algorytm generujacy konfiguracje leksykograficznie. Patrząc na jego schemat abstrakcyjnie, generuje on $d + 1$ - poziomowe drzewo, ktorego węzły reprezentują pozostałą przestrzeń, krawędzie ile elementów danego typu (poziomu), zaczynając od najdłuższego, mieści się w konfiguracji, która jest czytana jako wartości wezłów na ścieżce od korzenia (długośc belki) do liścia (pozostała finalnie przestrzeń).
-Szczegółowy opis tej metody można przeczytać w pracy Saad M.A. Sulimana \textit{Pattern generating procedure for the cutting stock problem} \cite{GEN_CONFIGS}. \\
+\begin{table}[!h] 
+\begin{center}
+	\begin{tabular}{ |p{3cm}|p{5cm}|p{3cm}|  }
+		\hline
+		Skrót & Nazwa angielska & Współczynnik aproksymacji\\
+		\hline
+		NF   & Next Fit & 2\\
+		FF & First Fit & 1.7\\
+		BF & Best Fit & 1.7\\
+		NFD & Next Fit Decreasing &  1.691\\
+		FFD & First Fit Decreasing & 11/9\\
+		BFD & Best Fit Decreasing & 11/9\\
+		$H_M$ & Harmonic & 1.691\\	
+		\hline
+	\end{tabular}
+	\caption{\label{APPROX_RATIOS}Tabela algorytmów aproksymacyjnych - na podstawie artykułu \textit{A note on the approximability of cutting stock problems} }
+\end{center}
+\end{table}
 
-\subsection{Macierz ograniczeń} \label{macierz_ograniczen}
-Do przechowywania wygenerowanych w opisany wyżej sposób danych, wykorzystane zostało wywołanie API solvera GLPK zdefiniowane następująco: \\
-\verb|void glp_set_mat_col(glp_prob *P, int j, int len, const int *ind, const double *val)| \\
-Z opisu w dokumentacji \cite{GLPK_DOCS} można dowiedzieć się, że:
-\begin{itemize}
-	\item \textbf{P*} - wskaźnik na obiekt będący instancją problemu
-	\item \textbf{len} - $0 \leq len \leq m$, gdzie $m$ to długość $j$-tej kolumny, w naszym przypadku $m = d$
-	\item \textbf{ind*} - wskażnik na tablicę indeksów, przykładowo, gdy ind[$i$] = $k$, wtedy val[$i$] będzie w $k$-tym wierszu $\mathbf{j}$-tej kolumny macierzy ograniczeń
-	\item \textbf{val*} - wskażnik na tablicę wartośći
-\end{itemize}
-\textbf{val} i \textbf{ind} powinny mieć rozmiar len+1, ponieważ numeracja indeksów w bibliotece GLPK rozpoczyna się od jedynki, w przeciwieństwie do numeracji w języku C, rozpoczynającej się od zera. \\
+W 1980 pokazano, że dla uogólnionego d-wymiarowego Bin Packing, każdy algorytm o złożoności $o(nlogn)$ musi mieć współczynnik aproksymacji większy lub równy $d$ \cite{APPROX_RATIO}.
 
-Dla przytoczonego powyżej przykładu \ref{example} jedna z konfiguracji mogłaby wyglądać następująco:
+W 1994 wykazano, że heurystyki FFD i BFD charakteryzują się absolutnym współczynnikiem $1.5$, który zarazem jest najlepszym możliwym dla PCB, dopóki nie zostanie udowodnione $P=NP$ \cite{WORST_CASE_APPROX}.
 
-\begin{lstlisting}
-col.config to tablica: {0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 0}            
-// col (zmienna typu StockConfig)	
-// zmienne przekazywane w wywołaniu bibliotecznym przezentowałyby się tak: 
-ind[1] = 7; val[1] = col.config[1-1] // = 1; 
-ind[2] = 9; val[2] = col.config[2-1] // = 2; 
-\end{lstlisting}
+Według autorów pracy, \textit{A note on the approximability of cutting stock problems}, owe algorytmy po pewnej konwersji mogą zostać użyte do rozwiązywania instancji Problemu Cięcia Belek. Stawiają oni tezę, że przy zastosowaniu zaprezentwanych konwersji, również istnieje Asymptotic Polynomial Time Approximation Scheme (APTAS) dla jednowymiarowego PCB \cite{NOTE_ON_APPROX}.
+Najbardziej znanym takim schematem jest ten zaprezentowany przez Fernandeza de la Vegę i Luekera, który zwaraca rozwiązania o koszcie mniejszym lub równym: $(1+\varepsilon)OPT(L) + 1$, gdzie $OPT(L)$ to koszt optymalny \cite{APTAS}. \\
 
+W niniejszej pracy do dalszych rozważań i implementacji wybrany został First Fit Decreasing.
 
-Przy wielu instancjach PCB może okazać się, że finalna macierz ograniczeń ma postać macierzy rzadkiej, czyli takiej w której większość elementów ma wartość zero. Dlatego wartym wpomnienia jest fakt, że nie trzeba obawiać się wpisywania zer w tablicę val, ponieważ macierz ograniczeń w GLPK została zaimplementowana w taki sposób, iż zapamiętuje jedynie niezerowe wartośći, cytując dokumentację: \textit{Zero elements are allowed, but they are not stored in the constraint matrix}. To pozytywnie wpływa na zużycie pamięci operacyjnej jak również na prędkość wywoływanych z macierzą jako argumentem algorytmów. W kodzie źródłowym biblioteki można znaleźć opis implementacji tego mechanizmu \cite{GLPK_SRC}.
-
-\subsection{Nakładanie ograniczeń}
-Kolejnym krokiem w uzupełnieniu danych potrzebnych solverowi jest nałożenie ograniczeń na  wiersze i kolumny. W tym przypadku na $d$ wierszy zostały nałożone  ograniczenia dolne, ktore odpowiadają wartościom po prawej stronie znaków nierówności z formuły (wymaganej liczbie elementów danego typu). Kolumnom należało ustawić ograniczenie dolne równe zero.
-Dla wierszy odpowiada za to funkcja: \\
-\verb|void glp_set_row_bnds(glp_prob *P, int i, int type, double lb, double ub)|
-\begin{itemize}
-	\item \textbf{P*} - to samo co wcześniej
-	\item \textbf{i} - numer wiersza na który nałożone mają zostać ograniczenia
-	\item \textbf{type} - typ ograniczenia, nas interesuje wartość numeryczna GLP\_LO, czyli ograniczenie dolne, wtedy dla zmiennej pomocniczej związanej z $i$-tym wierszem wygląda to tak: $\mathbf{lb} \leq x \le +\infty$
-	\item \textbf{lb} - wartość ograniczenia dolnego
-	\item \textbf{ub} - wartość ograniczenia górnego
-\end{itemize}
-Analogicznie wygląda to dla kolumn: \\
-\verb|void glp_set_col_bnds(glp prob *P, int j, int type, double lb, double ub)|
-
-\subsection{Typ zmiennych}\label{typ_zmiennych}
-Również w przypadku MIP należy dać znać solverowi od których zmiennych wymagamy, aby były całkowite. W naszym przypadku są to wszystkie, a jest ich tyle ile kolumn (konfiguracji).
-Potrzebne jest wywołanie funkcji:
-\verb|void glp_set_col_kind(glp_prob *P, int j, int kind)|
-
-\begin{itemize}
-	\item \textbf{P*} - to samo co wcześniej
-	\item \textbf{j} - numer kolumny której rodzaj ma być zmieniony
-	\item \textbf{kind} - rodzaj kolumny, wartość GLP\_IV odpowiada za typ całkowity
-\end{itemize}
-
-\subsection{Funkcja celu}
-Kierunek optymalizaji (minimalizacja czy maksymalizacja) można ustawić wywołując funkcję: \\
-\verb|void glp_set_obj_dir(glp_prob *P, int dir)| \\
-\textbf{dir} jest w stanie przyjąć wartości kryjące sie pod stałymi: \\
-GLP\_MIN - minimalizacja \\
-GLP\_MAX - maksymalizacja \\
-
-Za ustawienie współczynników $j$-tej zmiennej w funkcji celu odpowiada funkcja: \\
-\verb|void glp_set_obj_coef(glp_prob *P, int j, double coef)| \\
-W tym przypadku wszystkim zmiennym zostają nadane współczynniki równe jeden.
-
-\subsection{Metody rozwiązujące problem}
-{\parindent0pt
-Plik \verb|Sourcode/src/solver_part.c|
-}
-\subsubsection{Naiwne podejście}
-Pierwszym etapem jest usunięcie ze wzoru \ref{linear_formula} ograniczeń całkowitoliczbowych zmiennych. Wystarczy nie wywoływac metody glp\_set\_col\_kind i pozostawić domyślny typ zmiennych - ciągły. Następnym krokiem jest rozwiązanie powstałego w ten sposób LP (nazywanego relaksacją programowania liniowego) - do tego posłuży algorytm sympleksowy. Poniżej definicja funkcji, która go wywołuje:\\
-\verb|int glp_simplex(glp_prob *P, const glp_smcp *parm)|. \\
-Otrzymane w ten sposób rozwiązanie (zmienne) należy zaokrąglić do najbliższej wartośći całkowitoliczbowej. 
-Oczywiście rozwiązanie otrzymane w ten sposób nie będzie optymalne, co więcej, może być niespełnialne, ponieważ może naruszać nałożone ograniczenia, konkretnie liczbę potrzebnych elementów danego rodzaju, może się okazać, że będzie ich za mało.
-
-Nie da się tu skorzystać z własności zachowania całkowitości podstawowych rozwiązań cechującej problemy postaci $max \mathbf{c^Tx}$ takich że $A\mathbf{x = b}$, gdzie $A$ i $\mathbf{b}$ mają wszystkie wpisy całkowite, a macierz $A$ jest całkowicie unimodularna.
-
-Aby sobie z tym poradzić można przerzucić uzyskane w ten sposób konfiguracje do wektora (dynamicznej tablicy) belek, policzyć ile elementów danego rodzaju brakuje i z tymi dwiema informacjami wywołać algorytm approksymacyjny FFD, który je dopakuje.
-
-\subsubsection{MIP}
-Precyzyjnie rozpatrywany jest problem IP, szczególny przypadek MIP, którego wszystkie zmienne decyzyjne są dyskretne.
-Dlatego też dokumentacja GLPK odnosi się tylko do MIP. Samo GLPK do rozwiązywania MIP używa solvera opartego na metodzie \textit{branch-and-cut}, która jest hybrydą metod \textit{branch-and-bound} i \textit{cutting plane}. \\
-Fukcja wywołująca optymalizację MIP: \verb|int glp_intopt(glp_prob *P, const glp_iocp *parm)|. \\
-Gdy w parametrach został wyłączony \textit{presolver}, co jest ustawieniem domyślnym, obiekt problemu (P) powinien zawierać optymalne rozwiązanie relaksacji LP, które można uzyskać rutyną wywołującą solver sympleksowy.
+\subsection{First Fit Decreasing}  \label{approx_pseudocode}
+Wycinanie elementów z belki, będzie tu traktowane jako dokładanie elementów do kosza o pojemności równej długości belki.
+Algorytm jest opisany następująco:
 
 
-Wywołania metod mogą wyglądać podobnie jak niżej:
-\begin{lstlisting}[language=C]
-/* Początek wspólnej sekcja dla obydwu podejść */
-// lp - wskaźnik na zmienną typu glp_prob
-glp_smcp simplex_param; // zmienna odpowiadająca za parametry 
-                        // metody sympleksowej
-glp_init_smcp(&simplex_param);  // inicjacja domyślnych parametrów
-glp_simplex(lp, &simplex_param); // wywołanie rutyny, która przeprowadza 
-				// optymalizację algorytmem sympleksowym
+\begin{pseudokod}[H]
+	\KwData{Lista elementów różnej długości.}
+	\KwResult{Upakowanie - ułożenie elementów w koszach tak, aby suma rozmiarów elementów w każdym koszy była równa, co najwyżej pojemności kosza.}
+	Posortowanie elementów w kolejności nierosnącej \;
+	Otworzenie nowego kosza \;
+	\ForEach{element z posortowanej listy, znajdź pierwszy kosz do którego się mieści}{
+		\If{znalazł się taki kosz}{dołóź element do tego kosza}
+		\Else{Otwórz nowy kosz i dołóż do niego element}	
+	}
 	
-/* Koniec sekcji wspólnej */
-/* w przypadku metody naiwnej pozostaje zaokrąglić wyniki i wywołać FDD */
+	\caption{First Fit Decreasing}
+\end{pseudokod}
 
-/* Sekcja odpowiedzialna za MIP */
-for (size_t j = 1; j <= numOfCols; j++)
-{
-	glp_set_col_kind(lp, j, GLP_IV);
-}
-glp_iocp mip_parm;   // zmienna odpowiadająca za parametry MIP
-glp_init_iocp(&mip_parm); // inicjacja domyślnych parametrów
-mip_parm.presolve = GLP_OFF;
-glp_intopt(lp, &mip_parm);
-	
-\end{lstlisting}
-
-
-\subsection{Odzyskanie rozwiązania}
-\subsubsection{Metoda sympleksowa}
-{\parindent0pt
-\verb|int glp_get_prim_stat(glp_prob *P)| - informuje o statusie podstawowego rozwiązania dla określonego obiektu problemu, wartość GLP\_FEAS - rozwiązanie jest spełnialne \\
-}
-\verb|double glp_get_obj_val(glp_prob *P)| - uzyskanie wartości funkcji celu (liczby potrzebnych belek)  \\
-\verb|double glp_get_col_prim(glp_prob *P, int j)| - zwraca wartość zmiennej związanej z j-tą kolumną (liczby potrzebnych konfiguracji o indeksie j) - interesują nas wartości większe od zera, które należy zaokraglić
-
-\subsubsection{Metoda MIP}
-Funkjce zwracają wartości analogicznie jak powyżej. \\
-\verb|int glp_mip_status(glp_prob *P)| - informuje o statusie rozwiązania dla wywołania metody MIP, wartość GLP\_OPT - rozwiązanie jest optymalne pod względem liczby całkowitej \\
-\verb|double glp_mip_obj_val(glp_prob *P)|\\
-\verb|double glp_mip_col_val(glp_prob *P, int j)| - pomimo typu \textit{double} zwracane wartości są całkowite i nie ma potrzeby ich zaokrąglania, wystarczy je zrzutować np. na \textit{size\_t}
-
-Dla obydwu metod pozyskanie konfiguracji wygląda tak samo: \\
-\verb|int glp_get_mat_col(glp_prob *P, int j, int ind[], double val[])| - zwraca dwie tablice, które mają strukturę analogiczną jak w przypadku umieszczania konfiguracji w instancji problemu (patrz \ref{macierz_ograniczen}). \\
-
-
-Po odpowienim sformatowaniu rozwiązania uzyskanego powyższymi metodami (w przypadku podejścia naiwnego również zaokrągleniu, uzupełnieniu brakujacych elementów algorytmem FFD) można wydrukować je na wyjście (terminal lub plik).
-
-Tekst wyjścia programu dla przytoczonego wyżej przykładu można zobaczyć na rysunku \ref{output_example}. 
-Wiersze zawierają informację kolejno o: 
-\begin{itemize}
-	\item długości belki
-	\item liczbie typów
-	\item liczbie wszyskich obiektów
-	\item ograniczeniu dolnym
-	\item posortowanej w kolejności nierosnącej długości typów obiektów
-	\item liczbie potrzebnych elementów danej długości (w przykładzie potrzeba 20 elementów długosći 2200)
-	\item wybranym algorytmie
-	\item[*] liczbie wygenerowanych konfiguracji
-	\item[*] rozmiarze macierzy ograniczeń
-	\item[*] liczbie zmiennych całkowitych w problemie liniowym
-	\item[*] statusie rozwiązania
-	\item liczbie potrzebnych belek
-	\item poszczególnych konfiguracjach potrzebnych w rozwiązaniu, wylistowanych w osobnych wierszach, z których każdy składa się z kolmumn:
-	\begin{itemize}
-		\item  pierwsza, postaci: C[$i$], gdzie $i$ to numer konfiguracji (w przypadku MIP są to rzeczywiste indeksy wpisanych kolumn do macierzy ograniczeń)
-		\item nąstępne $d$ (w podanym przykładzie trzynastu) kolumn oddzielonych znakami ``$|$``, odpowiadają posortowanym rodzajom obiektów, wartość każdej z nich to liczba elementów danego typu występująca w konfiguracji
-		\item kolumna rozpoczynająca się po znakach: ``$\%$`` - niewykorzystana przestrzeń w pojedyńczej belce
-		\item (w przypadku MIP) dodatkowa kolumna, rozpoczynająca się po znakach: $|x$ - liczba potrzebnych belek z daną konfiguracją
-	\end{itemize}
-\end{itemize}
-* Punkty oznaczone gwiazdką dotyczą metod MIP i SM.
-
-\section{Ograniczenie dolne}
-Pomocną w trakcie testów będzie informacja o ograniczeniu dolnym \\ (LOWER\_STOCK\_NUM\_BOUND) - jest to suma długości wszystkich elementów podzielona przez długość belki i zaokrąglona w górę - nie istnieją poprawne rozwiązania o mniejszej liczbie belek. Stąd, tak jak w tym przypadku, gdy dolna granica jest równa liczbie belek z uzyskanego rozwiązania, możemy mieć pewność, że jest ono optymalne pod tym względem.
-
-\begin{figure}[h!]
-	\lstinputlisting{example_result.txt}
-	\caption{Przykładowe wydrukowane wyjście dla programu używajacego MIP}
-	\label{output_example}
-\end{figure}
-
-
-
-
-
+\section{Algorytm OPT+1}
+Opis algorytmu, który pierwotnie miał zostać zaimplementowany w niniejszej pracy, można znaleźć w dokumencie z 2011 roku, \textit{A Polynomial Time OPT + 1 Algorithm for the Cutting Stock Problem with a Constant Number of Object Lengths} \cite{ALG_OPT_1}. 
+W uproszczeniu, bazuje on na przytoczonym w 
+\hyperlink{section.1.2}{sekcji 1.2} sformułowaniu.
+Wprowadzony został tam jednak podział na zbiorze typów elementów. 
+Wszystkie elementy poniżej długości $\varepsilon\beta$ zaliczono do \textit{małych}, a powyżej do \textit{dużych}, gdzie $\varepsilon = 1/(2d-1)$. To samo przełożyło się na konfiguracje. Podzbiory dużych elementów w konfiguracjach nazywano dużymi konfiguracjami, a podzbiory małych, małymi. Dodatkowo wprowadzono podzbiór dużych konfiguracji, które odpowiadają niezerowym zmiennym ($S^B$). Następnie tak zamieniono zapis warunków z pkt. 1.2 ze wcześniejszego sformułowania, aby rozpatrzyć podział na duże i małe konfiguracje. Natomiast na zmienne, które reprezentują liczbę zużytych belek nałożono następujące ograniczenia: te związane z małymi konfiguracjami należą do $\mathbb{R}^+\cup \{0\}$ dla każdej konfiguracji, której duża konfiguracja należy do $S^B$, w przeciwnym wypadku zmienna ta jest równa zero. Na drugie nałożono warunek całkowitości (należenie do $\mathbb{Z}_{\geq 0}$) , gdy duża konfiguracja z nią związania należy do $S^B$, w przeciwnym wypadku zmienna jest zerowana.
+Takie sformułowanie nazywamy MIP (ang. Mixed Integer Programming), ponieważ wymaga się, aby tylko część zmiennych była całkowita (ang. integer).
+Z tego powodu dalsza cześć algorytmu obejmuje procedurę zaokrąglania, która pakuje małe elementy które jeszcze dało radę zapakować całkowicie według zadanego sformułowania programowania liniowego. Pozostałe, które zostały zapakowane cześciowo pakuje metodą First Fit. Następnie wykazano, że resztę elementów, które mogły pozostać, jest możliwa do upakowania w jedną belkę (stąd nazwa OPT + 1). Dodatkowo ilość belek $m$ o które pytamy w sformułowaniu jest dobierana na zasadzie wyszukiwania binarnego (ang. bin search) przyjmując jako początkowy zbiór $\{1,\dots, n\}$. Jeśli procedura znalazła optymalne rozwiązanie dla $m$ równego wartości środkowego elementu, jako następny wybieramy element środkowy lewego podzbioru, w przeciwnym przypadku prawego itd., aż do zbioru z tylko jedną wartością. \\
+\textbf{Niestety, aby algorytm pozostał w klasie złożoności wielomianowej, jego główna część (MIP) jest rozwiązywana za pomocą algorytmu Lenstry, który z kolei bazuje na zmodyfikowanej wersji metody elipsoidalnej. Ta z powodu jej skomplikowania, nie została jeszcze zaimplementowany na żadnym solverze, mimo bardzo obiecujących teoretycznych wyników.}
 
 

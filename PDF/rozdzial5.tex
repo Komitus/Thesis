@@ -1,14 +1,15 @@
-\chapter{Podsumowanie} \label{ch:SUMMARY}
-\addcontentsline{toc}{chapter}{Podsumowanie}
+\chapter{Podsumowanie}
+%\addcontentsline{toc}{chapter}{Podsumowanie}
 \thispagestyle{chapterBeginStyle}
+\label{ch:SUMMARY}
 
 W pracy przeanalizowano jednowymiarowy, optymalizacyjny Problem Cięcia Belek dla którego liczba typów elementów jest stała. 
-Następnie przedstawiono cztery wybrane algorytmu rozwiązujące go. W programie dołączonym do pracy, którego szczegóły techniczne opisano, zaimplementowano trzy z nich. Na końcu przedstawiono wyniki testów, które miały na celu zbadanie optymalności zwracanych przez program rozwiązań.
+Następnie przedstawiono cztery wybrane algorytmy rozwiązujące go. W programie dołączonym do pracy, którego szczegóły techniczne opisano, zaimplementowano trzy z nich. Na końcu przedstawiono wyniki testów, które miały na celu zbadanie optymalności zwracanych przez program rozwiązań.
 
 \section{Wnioski}
 Na podstawie przeglądu literatury, analizy badanego problemu, przeprowadzonych testów zostały wyciągnięte  przez autora pracy następujące wnioski:
 \begin{enumerate}
-	\item Często mogłoby się okazać, że nawet dla dużych instancji problemu algorytm aproksymacyjny zwróci optymalne bądź bliskie (np. optymalne plus jeden) takiemu rozwiązanie, w sytuacji gdy sprawdzić to można patrząc na ograniczenie dolne. Dlatego nawet gdyby autor dysponował implementacją algorytmu OPT+1, dla zaoszczędzenia czasu, uruchamiałby go jako drugi w kolejności, gdyby rozwiązanie zwrócone przez FFD byłoby dalekie od optymalnego.
+	\item Często widać, że nawet dla dużych instancji problemu algorytm aproksymacyjny zwróci optymalne bądź bliskie (np. optymalne plus jeden) takiemu rozwiązanie, w sytuacji gdy sprawdzić to można patrząc na ograniczenie dolne. Dlatego nawet gdyby autor dysponował implementacją algorytmu OPT+1, dla zaoszczędzenia czasu, uruchamiałby go jako drugi w kolejności, gdyby rozwiązanie zwrócone przez FFD byłoby dalekie od dolnej granicy optymalnego.
 	\item W powyższej sytuacji, w algorytmie OPT+1, zbiór na którym wykonywane jest przeszukiwanie binarne liczby belek, dla których problem jest spełnialny, mógłby początkowo być ograniczony z dołu przez obliczone ograniczenie dolne, a z góry przez liczbę potrzebnych belek otrzymanej przy pomocy algorytmu aproksymacyjnego.
 	\item Z powodu gwałtownego wzrostu czasu spowodowanego dużą ilością ograniczeń całkowitoliczbowych dla danej instancji problemu, obiecująca wydaje się być część algorytmu OPT + 1, która nakłada owe ograniczenia tylko dla dużych konfiguracji, a małymi elementami zajmuje się po rozwiązaniu głównego MIP (wciaż bez ograniczeń na ich całkowitość).
 	\item Jednak nawet gdyby pokuszono się o implementację algorytmu OPT+1, to przez fakt wykorzystanego w nim podejścia generowania wszystkich możliwych konfiguracji, dla ogromnych instancji problemów, obliczenia byłyby niewykonalne (głownie za sprawą dużej liczby zmiennych). Dla takich przypadków możnaby pochylić się nad metodą opisaną w pracy: \textit{A Linear Programming Approach to the Cutting-Stock Problem}\cite{GOMORY}.
