@@ -7,7 +7,7 @@ Zbiór danych na których zostały przeprowadzone testy znajduje się w katalogu
 
 Do pomiaru czasu wykonania zostało wykorzystane linuksowe polecenie \textbf{time} - brana pod uwagę była tylko ilość czasu procesora spędzonego w trybie użytkownika. Pominięty został czas spędzony w jądrze systemu - czytanie wejścia, alokacje pamięci.
 
-Za automatyzację uruchamiania programu na poszczególnych plikach i algorytmach odpowiada skrypt napisany w języku powłoki bash - plik \verb|Tests/run_tests.sh|. Iteruje on po plikach z katalogu w którym znajduja się dane testowe, po algorytmach, wyznacza nazwy plików według określonego schematu i wywołuje komendę: \\
+Za automatyzację uruchamiania programu na poszczególnych plikach i algorytmach odpowiada skrypt napisany w języku powłoki bash - plik \verb|Tests/run_tests.sh|. Iteruje on po plikach z katalogu w którym znajdują się dane testowe, po algorytmach, wyznacza nazwy plików według określonego schematu i wywołuje komendę: \\
 \verb|{ time $EXEC_FILE -f $infile -o $resultfilename -a $algo > $solver_log ;} 2> $time_filename|, 
 
 \begin{itemize}
@@ -17,10 +17,10 @@ Za automatyzację uruchamiania programu na poszczególnych plikach i algorytmach
 	\item \$resultfilename - ścieżka do pliku z rozwiązaniem: \\ \verb|Tests/output/test<numer_testu>_<algorytm>_res.txt| (patrz rysunek \ref{output_example})
 	\item \$algo - algorytm (APPROX, MIP, SM)
 	\item \$solver\_log - ścieżka do pliku w którym zostanie zapisane standardowe wyjście programu, a na które drukuje bibliotek GLPK podczas optymalizacji
-	\item \$time\_filename - ścieżka do pliku z rezulatatem polecenia \textbf{time}
+	\item \$time\_filename - ścieżka do pliku z rezultatem polecenia \textbf{time}
 \end{itemize}
 
-Wykresy i tabele wyegenrowane zostały za pomocą skryptu pythonowego: \\ \verb|Tests/generate_plots.py|.
+Wykresy i tabele wygenerowane zostały za pomocą skryptu pythonowego: \\ \verb|Tests/generate_plots.py|.
 
 Oznaczenia:
 \begin{itemize}
@@ -33,9 +33,7 @@ Platforma testowa to komputer stacjonarny z czterordzeniowym procesorem Intel Co
 
 Warto dodać, że test numer dwa pochodzi od EURO Special Interest Group on Cutting and Packings. Dane testowe przez nich dostarczone można znaleźć pod tym linkiem:
 \href{https://www.euro-online.org/websites/esicup/data-sets/}{ESICUP dataset}.
-Konkretnie jest to pozycja \textit{The 28 VERY hard BPP instances of J. Schoenfield (with m from 140 to 200). Test results with an LP-based approach in (Data sets: hard28)} - próba o nazwie \textit{'BPP    14'}. Zawiera on podobny format danych opisanych wcześniej z tą różnicą, że długośc belki i liczba elementów są zamienione wierszami. Jednakże testowany w tej pracy przykład rozpatruje najmniejszy element długości 40 - stąd liczba typów 126 zamiast pierwotnych 136. Spowodowane było to problemem z wykorzystaniem całej dostępnej pamięci operacyjnej platformy testowej dla drugiej wartości. Owe dane testowe łamią też w pewnym sensie koncepcję przyjęcia za liczbę typów stałej. Największa liczba elementów danego typu jaka występuje to 2, zazwyczaj wynosi ona jeden, więc pomimo liczby typów wynoszącej 126, wszystkich elementów jest 148. Same instancje problemów zostały określone jako \textit{bardzo trudne}.
-
-
+Konkretnie jest to pozycja: \textit{The 28 VERY hard BPP instances of J. Schoenfield (with m from 140 to 200). Test results with an LP-based approach in (Data sets: hard28)} - próba o nazwie \textit{'BPP    14'}. Zawiera on podobny format danych opisanych wcześniej z tą różnicą, że długość belki i liczba elementów są zamienione wierszami. Jednakże testowany w tej pracy przykład rozpatruje najmniejszy element długości 40 - stąd liczba typów 126 zamiast pierwotnych 136. Spowodowane było to problemem z wykorzystaniem całej dostępnej pamięci operacyjnej platformy testowej dla drugiej wartości. Owe dane testowe łamią też w pewnym sensie koncepcję przyjęcia za liczbę typów stałej. Największa liczba elementów danego typu jaka występuje to 2, zazwyczaj wynosi ona jeden, więc pomimo liczby typów wynoszącej 126, wszystkich elementów jest 148. Same instancje problemów zostały określone jako \textit{bardzo trudne}.
 
 \begin{table}[H] 
 	\begin{center}
@@ -55,7 +53,7 @@ Konkretnie jest to pozycja \textit{The 28 VERY hard BPP instances of J. Schoenfi
 			
 			\hline
 		\end{tabular}
-		\caption{Podstawowe dadne dotyczące poszczególnych testów.}
+		\caption{Podstawowe dane dotyczące poszczególnych testów.}
 	\end{center}
 \end{table}
 
@@ -64,8 +62,8 @@ Konkretnie jest to pozycja \textit{The 28 VERY hard BPP instances of J. Schoenfi
 
 Dla każdego testu solver był w stanie znaleźć rozwiązanie i zwrócił komunikaty:
 \begin{itemize}
-	\item ``OPTIMAL LP SOLUTION FOUND`` dla metody simpleksowej
-	\item ``INTEGER OPTIMAL SOLUTION FOUND`` dla metody MIP
+	\item ``OPTIMAL LP SOLUTION FOUND`` dla metody sympleksowej
+	\item ``INTEGER OPTIMAL SOLUTION FOUND`` dla metody MIP (\textit{branch-and-cut})
 \end{itemize}
 
 \subsection{Liczba belek}
@@ -90,21 +88,21 @@ Dla każdego testu solver był w stanie znaleźć rozwiązanie i zwrócił komun
 			9 & 51 & 51 & 51 & 51\\ 
 			\hline
 		\end{tabular}
-			\caption{Liczba belek dla poszczególnych algorytmów w zależności od numeru testu.}
+			\caption{Liczba belek dla poszczególnych algorytmów (i dolna granica) w zależności od numeru testu.}
 	\end{center}
 \end{table}
 
 \begin{figure}[H]
 	\begin{center}
 	\includegraphics[width=12cm]{plots/res}
-	\caption{Wykres przedstawiający liczbę belek (i ich dolną granicę) w rozwiązaniu dla poszczególnych algorytmów w zależności od numeru testu.}
+	\caption{Wykres przedstawiający liczbę belek w rozwiązaniu dla poszczególnych algorytmów \\ (i ich dolną granicę) w zależności od numeru testu.}
 	\end{center}
 \end{figure}
 
 \begin{figure}[H]
 	\begin{center}
 		\includegraphics[width=12cm]{plots/res_configs}
-		\caption{Wykres przedstawiający liczbę belek (i ich dolną granicę) w rozwiązaniu dla poszczególnych algorytmów w zależności od liczby wygenerowanych konfiguracji.}
+		\caption{Wykres przedstawiający liczbę belek w rozwiązaniu dla poszczególnych algorytmów \\ (i ich dolną granicę) w zależności od liczby wygenerowanych konfiguracji.}
 	\end{center}
 \end{figure}
 
@@ -128,14 +126,14 @@ Dla każdego testu solver był w stanie znaleźć rozwiązanie i zwrócił komun
 			9 & 0.001 & 1.804 & 84.618\\ 
 			\hline
 		\end{tabular}
-		\caption{Czas wykonania progamu (w sekundach) dla poszczególnych algorytmów i testów.}
+		\caption{Czas wykonania programu (w sekundach) dla poszczególnych algorytmów i testów.}
 	\end{center}
 \end{table}
 
 \begin{figure}[H]
 	\begin{center}
 		\includegraphics[width=12cm]{plots/time_configs}
-		\caption{Wykres przedstawiający czas wykonania programu dla poszczególnych algorytmów w zależności od liczby wygenerowanych konfiguracji.}
+		\caption{Wykres przedstawiający czas wykonania programu dla poszczególnych algorytmów \\ w zależności od liczby wygenerowanych konfiguracji.}
 	\end{center}
 \end{figure}
 %\fi
@@ -161,10 +159,10 @@ W powyższych danych można zauważyć, że
 \section{Wnioski}
 
 \begin{itemize}
-	\item Dla wielu instancji problemu cięcia belek może sie okazać, że rozwiązanie obliczone przy pomocy algorytmy aproksymacyjnego FFD będzie często bliskie rozwiązania optymalnego.
+	\item Dla wielu instancji problemu cięcia belek może się okazać, że rozwiązanie obliczone przy pomocy algorytmy aproksymacyjnego FFD będzie często bliskie rozwiązania optymalnego.
 	\item W przypadku optymalizacji dyskretnej dużo czasu zajmuje znalezienie rozwiązania optymalnego pod kątem całkowitoliczbowym, w kontraście do szybkiego znajdowania optymalnego rozwiązania problemu pochodnego (poddanego relaksacji) algorytmem simpleks.
-	\item Potwierdza się informacja dotycząca metody branch-and-cut zawarta w dokumentacji: \textit{GLPK branch-and-cut solver is not perfect, so it is unable to solve hard or very large scale MIP instances for a reasonable time.} Gdyby zwiększyć liczbę potrzebnych małych elementów do dwudziestu dla każdego rodzaju, program działałby dłużej niż najdłuższy zaprezentowany test (powyżej trzech godzin).
-	\item Generowanie wszystkich możliwych konfiguracji i decydowanie o ich wyborze po fakcie ich wygenerowania nie sprawdzi się w przypadku maszyn z małą ilościa pamięci operacyjnej.
+	\item Potwierdza się informacja dotycząca zaimplementowanej w GLPK metody  \textit{branch-and-cut} zawarta w dokumentacji: \textit{GLPK branch-and-cut solver is not perfect, so it is unable to solve hard or very large scale MIP instances for a reasonable time.} Gdyby zwiększyć liczbę potrzebnych małych elementów do dwudziestu dla każdego rodzaju, program działałby dłużej niż najdłuższy zaprezentowany test (powyżej trzech godzin).
+	\item Generowanie wszystkich możliwych konfiguracji i decydowanie o ich wyborze po fakcie ich wygenerowania nie sprawdzi się w przypadku maszyn z małą ilością pamięci operacyjnej.
 \end{itemize}
 
 

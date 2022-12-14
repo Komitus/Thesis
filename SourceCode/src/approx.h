@@ -2,9 +2,9 @@
 #include "vector.h"
 
 /**
- * @brief 
- * 
- * @param input 
+ * @brief Function that performs the approximation algorithm
+ *
+ * @param input
  * @return size_t SIZE_MAX indicates error
  */
 size_t approx(ProblemInstance *input, Vector *v);

@@ -26,8 +26,8 @@
 #define TO_FILE 0x02
 #define FOREACH_ALGO(ALGO) \
     ALGO(APPROX = 0x04)    \
-    ALGO(MIP = 0x08) \
-    ALGO(SM = 0x10) 
+    ALGO(MIP = 0x08)       \
+    ALGO(SM = 0x10)
 
 #define GENERATE_ENUM(ENUM) ENUM,
 

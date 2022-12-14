@@ -104,11 +104,9 @@ def make_basic_plots():
         plt.ylabel(y_label_str, fontsize=15)
         plt.xticks([r + barWidth for r in range(len(br[0]))], tests_idxs)
         if stat == 'res':
-            plt.title('Liczba belek w rozwiązaniu dla poszczególnych algorytmów \n\
-                (i ich dolna granica) w zależności od numeru testu')
+            plt.title('Liczba belek w rozwiązaniu dla poszczególnych algorytmów \n (i ich dolna granica) w zależności od numeru testu')
         else:
-            plt.title('Czas wykonania programu dla poszczególnych algorytmów \n\
-                w zależności od numeru testu')
+            plt.title('Czas wykonania programu dla poszczególnych algorytmów \n w zależności od numeru testu')
         plt.legend()
 
         png_name = plotsDIR+stat+'.png'
@@ -134,15 +132,13 @@ def make_plots_from_configs():
         fig, ax = plt.subplots()
         
         if stat == 'res':
-            title = 'Liczba belek w rozwiązaniu dla poszczególnych algorytmów \n\
-                (i ich dolna granica) w zależności od liczby wygenerowanych konfiguracji'
+            title = 'Liczba belek w rozwiązaniu dla poszczególnych algorytmów \n (i ich dolna granica) w zależności od liczby wygenerowanych konfiguracji'
             y_label_str = 'Liczba belek'
             y_arr = new_stocks_for_algos
             ax.plot(n, new_lower_bound, color=colors[len(colors)-1], label='dolna granica')
 
         elif stat == 'time':
-            title = 'Czas wykonania programu dla poszczególnych algorytmów \n\
-                w zależności od liczby wygenerowanych konfiguracji'
+            title = 'Czas wykonania programu dla poszczególnych algorytmów \n w zależności od liczby wygenerowanych konfiguracji'
             y_label_str = 'Czas wykonania programu (s)'
             y_arr = new_time_for_algos
 
@@ -203,7 +199,7 @@ def make_tables():
 
 if __name__ == "__main__":
     prepare_data()
-    #make_basic_plots()
-    #make_plots_from_configs()
+    make_basic_plots()
+    make_plots_from_configs()
     make_tables()
 

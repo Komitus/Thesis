@@ -22,4 +22,3 @@ void vector_free(Vector *v);
 void vector_clear(Vector *v, void (*destructor)(void *));
 
 #endif
-

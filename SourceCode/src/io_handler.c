@@ -125,7 +125,7 @@ static int handle_console_args(int argc, char *const *argv, IO_Info *io_info)
             io_info->options |= TO_FILE;
             io_info->outFilename = optarg;
             break;
-        case 'a': // encoding
+        case 'a': 
             for (size_t i = 0; i < sizeof(ALGO_ENUM_ARR) / sizeof(ALGO_ENUM_ARR[0]); i++)
             {
                 size_t len = strcspn(ALGO_STRING[i], "=") - 1;

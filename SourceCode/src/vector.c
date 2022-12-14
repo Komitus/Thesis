@@ -66,8 +66,8 @@ void *vector_get(Vector *v, size_t idx)
     return NULL;
 }
 /**
- * @brief delete item pointer from array from given idx
- * memory where v->items[idx] needs to be free manually!!!
+ * @brief delete item pointer from array from given idx memory 
+ * item v->items[idx] needs to be free manually!!!
  * @param v
  * @param idx
  */
@@ -89,6 +89,11 @@ void vector_delete(Vector *v, size_t idx)
         vector_resize(v, v->capacity / 2);
 }
 
+/**
+ * @brief free array of pointers of given vector
+ * items that pointers point to need to be free manualy!!!
+ * @param v 
+ */
 void vector_free(Vector *v)
 {
     free(v->items);

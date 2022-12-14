@@ -40,7 +40,7 @@ int solve_with_GLPK(ProblemInstance *input, IO_Info *io_info)
 	// glpk starts indexing from 1
 	for (size_t j = 1; j <= numOfCols; j++)
 	{
-		glp_set_col_bnds(lp, j, GLP_LO, 0.0, 0.0); // ograniczenia dolne na 0
+		glp_set_col_bnds(lp, j, GLP_LO, 0.0, 0.0);
 		glp_set_obj_coef(lp, j, 1.0);
 	}
 	assert(numOfRows == input->numOfTypes);
@@ -59,7 +59,7 @@ int solve_with_GLPK(ProblemInstance *input, IO_Info *io_info)
 		print_SM_solution(input, io_info, lp);
 		// lp is freed in print
 	}
-	else if (io_info->options & MIP)
+	else
 	{
 		for (size_t j = 1; j <= numOfCols; j++)
 		{
@@ -100,7 +100,7 @@ void print_SM_solution(ProblemInstance *input, IO_Info *io_info, glp_prob *lp)
 	vector_init(v, glp_get_obj_val(lp));
 
 	for (int colIdx = 1; colIdx <= numOfCols; colIdx++)
-	{	
+	{
 		size_t x = (size_t)round(glp_get_col_prim(lp, colIdx));
 		if (x > 0)
 		{
