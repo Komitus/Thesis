@@ -29,7 +29,7 @@ Analogicznym problemem do PCB jest Problem Pakowania (ang. Bin Packing) dalej ws
 Może być rozpatrywany w kontekście optymalizacji. W tym przypadku, elementy różnych rozmiarów muszą być upakowane w \textbf{skończoną} (tutaj różnica w stosunku do PCB) liczbę koszy, każdy zadanej, stałej długości, w taki sposób, który zminimalizuje ich zużytą liczbę. Patrząc na niego w kategorii problemu decyzyjnego, pytaniem jest czy zadane elementy zmieszczą się w podaną na wejściu problemu liczbę koszy.
 W przypadku zdefiniowania PP w programowaniu liniowym całkowitoliczbowym, w przeciwieństwie do PCB, zmienne całkowitoliczbowego nie reprezentują, ile razy dana konfiguracja została użyta, ale czy dany kosz został użyty oraz czy element o indeksie odpowiadającemu zmiennej został włożony do kosza o odpowiadającym indeksie.
 
-\textbf{Dane wejściowe}: Skończony zbiór elementów $I$, rozmiar $s(i) \in \mathbb{Z}$ dla każdego elementu $i \in I$, pojemność kosza $B \in \mathbb{Z^+}$, $K \in \mathbb{Z^+}$.
+\textbf{Dane wejściowe}: Skończony zbiór elementów $I$, rozmiar $s(i) \in \mathbb{Z}$ dla każdego elementu $i \in I$, pojemność kosza $B \in \mathbb{Z^+}$.
 
 \begin{align*}
 	min \; K = &\sum_{j=1}^{n} y_{j}, \; K \geq 1 \\

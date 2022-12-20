@@ -35,11 +35,7 @@ clean:
 remove: clean
 	@$(rm) $(BINDIR)/$(TARGET)
 	@echo "Executable removed!"
-	
-# TEST PART
-TESTS_DIR = tests
-run_test: 
-	@$(TESTS_DIR)/run_tests.sh
+
 	
   
 	
